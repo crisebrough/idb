@@ -91,7 +91,7 @@ FBFileContainerKind const FBFileContainerKindFramework = @"framework";
   }
 }
 
-- (FBFuture<FBInstalledArtifact *> *)install_app_stream:(FBProcessInput *)input compression:(FBCompressionFormat)compression make_debuggable:(BOOL)makeDebuggable override_modification_time:(BOOL)overrideModificationTime
+- (FBFuture<FBInstalledArtifact *> *)install_app_stream:(IDBProcessInput *)input compression:(FBCompressionFormat)compression make_debuggable:(BOOL)makeDebuggable override_modification_time:(BOOL)overrideModificationTime
 {
   return [self installExtractedApp:[self.temporaryDirectory withArchiveExtractedFromStream:input compression:compression overrideModificationTime:overrideModificationTime] makeDebuggable:makeDebuggable];
 }
@@ -101,7 +101,7 @@ FBFileContainerKind const FBFileContainerKindFramework = @"framework";
   return [self installXctestFilePath:[FBFutureContext futureContextWithFuture:[FBFuture futureWithResult:[NSURL fileURLWithPath:filePath]]] skipSigningBundles:skipSigningBundles];
 }
 
-- (FBFuture<FBInstalledArtifact *> *)install_xctest_app_stream:(FBProcessInput *)stream skipSigningBundles:(BOOL)skipSigningBundles
+- (FBFuture<FBInstalledArtifact *> *)install_xctest_app_stream:(IDBProcessInput *)stream skipSigningBundles:(BOOL)skipSigningBundles
 {
   return [self installXctest:[self.temporaryDirectory withArchiveExtractedFromStream:stream compression:FBCompressionFormatGZIP] skipSigningBundles:skipSigningBundles];
 }
@@ -111,7 +111,7 @@ FBFileContainerKind const FBFileContainerKindFramework = @"framework";
   return [self installFile:[FBFutureContext futureContextWithFuture:[FBFuture futureWithResult:[NSURL fileURLWithPath:filePath]]] intoStorage:self.storageManager.dylib];
 }
 
-- (FBFuture<FBInstalledArtifact *> *)install_dylib_stream:(FBProcessInput *)input name:(NSString *)name
+- (FBFuture<FBInstalledArtifact *> *)install_dylib_stream:(IDBProcessInput *)input name:(NSString *)name
 {
   return [self installFile:[self.temporaryDirectory withGzipExtractedFromStream:input name:name] intoStorage:self.storageManager.dylib];
 }
@@ -121,7 +121,7 @@ FBFileContainerKind const FBFileContainerKindFramework = @"framework";
   return [self installBundle:[FBFutureContext futureContextWithFuture:[FBFuture futureWithResult:[NSURL fileURLWithPath:filePath]]] intoStorage:self.storageManager.framework];
 }
 
-- (FBFuture<FBInstalledArtifact *> *)install_framework_stream:(FBProcessInput *)input
+- (FBFuture<FBInstalledArtifact *> *)install_framework_stream:(IDBProcessInput *)input
 {
   return [self installBundle:[self.temporaryDirectory withArchiveExtractedFromStream:input compression:FBCompressionFormatGZIP] intoStorage:self.storageManager.framework];
 }
@@ -131,7 +131,7 @@ FBFileContainerKind const FBFileContainerKindFramework = @"framework";
   return [self installAndLinkDsym:[FBFutureContext futureContextWithFuture:[FBFuture futureWithResult:[NSURL fileURLWithPath:filePath]]] intoStorage:self.storageManager.dsym linkTo:linkTo];
 }
 
-- (FBFuture<FBInstalledArtifact *> *)install_dsym_stream:(FBProcessInput *)input compression:(FBCompressionFormat)compression linkTo:(nullable FBDsymInstallLinkToBundle *)linkTo
+- (FBFuture<FBInstalledArtifact *> *)install_dsym_stream:(IDBProcessInput *)input compression:(FBCompressionFormat)compression linkTo:(nullable FBDsymInstallLinkToBundle *)linkTo
 {
   return [self installAndLinkDsym:[self dsymDirnameFromUnzipDir:[self.temporaryDirectory withArchiveExtractedFromStream:input compression:compression]] intoStorage:self.storageManager.dsym linkTo:linkTo];
 }
@@ -329,6 +329,48 @@ static const NSTimeInterval ListTestBundleTimeout = 180.0;
       }
       return [commands listTestsForBundleAtPath:testDescriptor.url.path timeout:ListTestBundleTimeout withAppAtPath:appPath];
     }];
+}
+
+- (FBFuture<NSArray<NSString *> *> *)list_tests_in_bundle_file_path:(nonnull NSURL *)bundlePath {
+  NSError *error = nil;
+  id<FBXCTestDescriptor> testDescriptor = nil;
+
+  if ([bundlePath.pathExtension isEqualToString:@"xctest"]) {
+    FBBundleDescriptor *bundle = [FBBundleDescriptor bundleWithFallbackIdentifierFromPath:bundlePath.path error:&error];
+
+    if (!bundle) {
+      return [FBFuture futureWithError:error];
+    }
+
+    testDescriptor = [[FBXCTestBootstrapDescriptor alloc] initWithURL:bundlePath name:bundle.name testBundle:bundle];
+  }
+  if ([bundlePath.pathExtension isEqualToString:@"xctestrun"]) {
+    NSArray<id<FBXCTestDescriptor>> *descriptors = [self.storageManager.xctest getXCTestRunDescriptorsFromURL:bundlePath error:&error];
+
+    if (!descriptors) {
+      return [FBFuture futureWithError:error];
+    }
+    if (descriptors.count != 1) {
+      return [[FBIDBError
+        describeFormat:@"Expected exactly one test in the xctestrun file, got: %lu", descriptors.count]
+        failFuture];
+    }
+
+    testDescriptor = descriptors[0];
+  }
+
+  if (!testDescriptor) {
+    return [FBFuture futureWithError:error];
+  }
+
+  id<FBXCTestExtendedCommands> commands = (id<FBXCTestExtendedCommands>) self.target;
+  if (![commands conformsToProtocol:@protocol(FBXCTestExtendedCommands)]) {
+    return [[FBIDBError
+      describeFormat:@"%@ does not conform to FBXCTestExtendedCommands", commands]
+      failFuture];
+  }
+
+  return [commands listTestsForBundleAtPath:testDescriptor.url.path timeout:ListTestBundleTimeout withAppAtPath:nil];
 }
 
 - (FBFuture<NSNull *> *)uninstall_application:(NSString *)bundleID
@@ -692,7 +734,7 @@ static const NSTimeInterval ListTestBundleTimeout = 180.0;
     }];
 }
 
-- (FBFuture<FBProcess<id, id<FBDataConsumer>, NSString *> *> *) dapServerWithPath:(NSString *)dapPath stdIn:(FBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut
+- (FBFuture<IDBProcess<id, id<FBDataConsumer>, NSString *> *> *) dapServerWithPath:(NSString *)dapPath stdIn:(IDBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut
 {
   id<FBDapServerCommand> commands = (id<FBDapServerCommand>) self.target;
   if (![commands conformsToProtocol:@protocol(FBDapServerCommand)]) {

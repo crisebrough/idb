@@ -6,6 +6,9 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <sys/socket.h>
+#import <netinet/in.h>
+#import <errno.h>
 
 #import <FBControlCore/FBControlCore.h>
 #import <FBDeviceControl/FBDeviceControl.h>
@@ -682,3 +685,4 @@ int main(int argc, const char *argv[]) {
   }
   return 0;
 }
+

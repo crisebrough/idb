@@ -75,8 +75,8 @@ enum MultisourceFileReader {
     return filePaths
   }
 
-  private static func filepathsFromTar(temporaryDirectory: FBTemporaryDirectory, input: FBProcessInput<OutputStream>, extractFromSubdir: Bool, compression: FBCompressionFormat) async throws -> [URL] {
-    let mappedInput = input as! FBProcessInput<AnyObject>
+  private static func filepathsFromTar(temporaryDirectory: FBTemporaryDirectory, input: IDBProcessInput<OutputStream>, extractFromSubdir: Bool, compression: FBCompressionFormat) async throws -> [URL] {
+    let mappedInput = input as! IDBProcessInput<AnyObject>
     let tarContext = temporaryDirectory.withArchiveExtracted(fromStream: mappedInput, compression: compression)
     if extractFromSubdir {
       return try await BridgeFuture.values(temporaryDirectory.files(fromSubdirs: tarContext))
@@ -87,8 +87,8 @@ enum MultisourceFileReader {
   }
 
   // TODO: Do we really need multithreading here? Isnt we just fill the stream sequentially while read is blocked and only then read starts?
-  private static func pipeToInput<Request: PayloadExtractable>(initialData: Data, requestStream: GRPCAsyncRequestStream<Request>) -> (Task<Void, Error>, FBProcessInput<OutputStream>) {
-    let input = FBProcessInput<OutputStream>.fromStream()
+  private static func pipeToInput<Request: PayloadExtractable>(initialData: Data, requestStream: GRPCAsyncRequestStream<Request>) -> (Task<Void, Error>, IDBProcessInput<OutputStream>) {
+    let input = IDBProcessInput<OutputStream>.fromStream()
     let stream = input.contents
 
     let readFromStreamTask = Task {

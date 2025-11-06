@@ -24,13 +24,13 @@ static NSTimeInterval EndOfFileFromStopReadingTimeout = 5;
 @property (nonatomic, strong, readonly) id<FBDataConsumer, FBDataConsumerLifecycle> stdErrConsumer;
 @property (nonatomic, strong, readonly) id<FBConsumableBuffer> stdErrBuffer;
 @property (nonatomic, strong, readonly) id<FBDataConsumer, FBDataConsumerLifecycle> shimConsumer;
-@property (nonatomic, strong, readonly) id<FBProcessFileOutput> shimOutput;
+@property (nonatomic, strong, readonly) id<IDBProcessFileOutput> shimOutput;
 
 @end
 
 @implementation FBLogicTestRunOutputs
 
-- (instancetype)initWithStdOutConsumer:(id<FBDataConsumer, FBDataConsumerLifecycle>)stdOutConsumer stdErrConsumer:(id<FBDataConsumer, FBDataConsumerLifecycle>)stdErrConsumer stdErrBuffer:(id<FBConsumableBuffer>)stdErrBuffer shimConsumer:(id<FBDataConsumer, FBDataConsumerLifecycle>)shimConsumer shimOutput:(id<FBProcessFileOutput>)shimOutput
+- (instancetype)initWithStdOutConsumer:(id<FBDataConsumer, FBDataConsumerLifecycle>)stdOutConsumer stdErrConsumer:(id<FBDataConsumer, FBDataConsumerLifecycle>)stdErrConsumer stdErrBuffer:(id<FBConsumableBuffer>)stdErrBuffer shimConsumer:(id<FBDataConsumer, FBDataConsumerLifecycle>)shimConsumer shimOutput:(id<IDBProcessFileOutput>)shimOutput
 {
   self = [super init];
   if (!self) {
@@ -235,7 +235,7 @@ static NSTimeInterval EndOfFileFromStopReadingTimeout = 5;
   // Report from the current queue, but wait in a special queue.
   dispatch_queue_t waitQueue = dispatch_queue_create("com.facebook.xctestbootstrap.debugger_wait", DISPATCH_QUEUE_SERIAL);
 
-  return [[FBProcessFetcher waitStopSignalForProcess:processIdentifier] onQueue:waitQueue chain:^FBFuture *(FBFuture *future) {
+  return [[IDBProcessFetcher waitStopSignalForProcess:processIdentifier] onQueue:waitQueue chain:^FBFuture *(FBFuture *future) {
     if (future.error){
       return [[XCTestBootstrapError
          describeFormat:@"Failed to wait test process (pid %d) to receive a SIGSTOP: '%@'", processIdentifier, future.error.localizedDescription]
@@ -299,10 +299,10 @@ static NSTimeInterval EndOfFileFromStopReadingTimeout = 5;
       stdOutFuture, stdErrFuture, shimFuture
     ]]
     onQueue:self.target.workQueue fmap:^(NSArray<id<FBDataConsumer, FBDataConsumerLifecycle>> *outputs) {
-      return [[[FBProcessOutput
+      return [[[IDBProcessOutput
         outputForDataConsumer:outputs[2]]
         providedThroughFile]
-        onQueue:self.target.workQueue map:^(id<FBProcessFileOutput> shimOutput) {
+        onQueue:self.target.workQueue map:^(id<IDBProcessFileOutput> shimOutput) {
           return [[FBLogicTestRunOutputs alloc] initWithStdOutConsumer:outputs[0] stdErrConsumer:outputs[1] stdErrBuffer:stdErrBuffer shimConsumer:outputs[2] shimOutput:shimOutput];
         }];
     }];
@@ -320,7 +320,7 @@ static NSTimeInterval EndOfFileFromStopReadingTimeout = 5;
     [FBCollectionInformation oneLineDescriptionFromArray:[@[launchPath] arrayByAddingObjectsFromArray:arguments]],
     [FBCollectionInformation oneLineDescriptionFromDictionary:environment]
   ];
-  FBProcessIO *io = [[FBProcessIO alloc] initWithStdIn:nil stdOut:[FBProcessOutput outputForDataConsumer:outputs.stdOutConsumer] stdErr:[FBProcessOutput outputForDataConsumer:outputs.stdErrConsumer]];
+  FBProcessIO *io = [[FBProcessIO alloc] initWithStdIn:nil stdOut:[IDBProcessOutput outputForDataConsumer:outputs.stdOutConsumer] stdErr:[IDBProcessOutput outputForDataConsumer:outputs.stdErrConsumer]];
   FBProcessSpawnConfiguration *configuration = [[FBProcessSpawnConfiguration alloc] initWithLaunchPath:launchPath arguments:arguments environment:environment io:io mode:FBProcessSpawnModePosixSpawn];
   FBArchitectureProcessAdapter *adapter = [[FBArchitectureProcessAdapter alloc] init];
 
@@ -330,7 +330,7 @@ static NSTimeInterval EndOfFileFromStopReadingTimeout = 5;
            onQueue:queue fmap:^FBFuture *(FBProcessSpawnConfiguration *mappedConfiguration) {
     return [self.target launchProcess:mappedConfiguration];
   }]
-          onQueue:queue map:^ FBFuture<NSNumber *> * (FBProcess *process) {
+          onQueue:queue map:^ FBFuture<NSNumber *> * (IDBProcess *process) {
     return [[FBLogicTestRunStrategy fromQueue:queue reportWaitForDebugger:self.configuration.waitForDebugger forProcessIdentifier:process.processIdentifier reporter:reporter] onQueue:queue fmap:^(id _) {
       return [FBXCTestProcess ensureProcess:process completesWithin:timeout crashLogCommands:self.target queue:queue logger:logger];
     }];

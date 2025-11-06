@@ -12,7 +12,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class FBFramebuffer;
-@class FBProcessInfo;
+@class IDBProcessInfo;
 @class FBSimulator;
 @class FBSimulatorBootConfiguration;
 @class FBSimulatorBridge;

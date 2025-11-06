@@ -391,7 +391,7 @@ extension IDBXCTestReporter {
       ["llvm-profdata", "merge", "-o", profdataPath.path]
       + profraws.map(\.path)
 
-    let mergeProcessFuture = FBProcessBuilder<NSNull, NSData, NSString>
+    let mergeProcessFuture = IDBProcessBuilder<NSNull, NSData, NSString>
       .withLaunchPath("/usr/bin/xcrun", arguments: mergeArgs)
       .withStdOutInMemoryAsData()
       .withStdErrInMemoryAsString()
@@ -411,15 +411,15 @@ extension IDBXCTestReporter {
         $0 += ["-object", $1]
       }
     let exportProcess = try await BridgeFuture.value(
-      FBProcessBuilder<NSNull, NSData, NSString>
+      IDBProcessBuilder<NSNull, NSData, NSString>
         .withLaunchPath("/usr/bin/xcrun", arguments: exportArgs)
         .withStdOutToInputStream()
         .withStdErrInMemoryAsString()
         .start()
     )
 
-    let gzipProcessInput = FBProcessInput<OutputStream>.fromStream()
-    let archiveFuture = FBArchiveOperations.createGzipData(from: gzipProcessInput as! FBProcessInput<AnyObject>, logger: self.logger)
+    let gzipProcessInput = IDBProcessInput<OutputStream>.fromStream()
+    let archiveFuture = FBArchiveOperations.createGzipData(from: gzipProcessInput as! IDBProcessInput<AnyObject>, logger: self.logger)
 
     let oneMega = 1024 * 1024
     let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: oneMega)

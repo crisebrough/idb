@@ -65,7 +65,7 @@
   return [self.rootTemporaryDirectory URLByAppendingPathComponent:NSUUID.UUID.UUIDString];
 }
 
-- (FBFutureContext<NSURL *> *)withGzipExtractedFromStream:(FBProcessInput *)input name:(NSString *)name
+- (FBFutureContext<NSURL *> *)withGzipExtractedFromStream:(IDBProcessInput *)input name:(NSString *)name
 {
   return [[self
     withTemporaryFileNamed:name]
@@ -78,15 +78,15 @@
 
 - (FBFutureContext<NSURL *> *)withArchiveExtracted:(NSData *)tarData
 {
-  return [self withArchiveExtractedFromStream:[FBProcessInput inputFromData:tarData] compression:FBCompressionFormatGZIP];
+  return [self withArchiveExtractedFromStream:[IDBProcessInput inputFromData:tarData] compression:FBCompressionFormatGZIP];
 }
 
-- (FBFutureContext<NSURL *> *)withArchiveExtractedFromStream:(FBProcessInput *)input compression:(FBCompressionFormat)compression
+- (FBFutureContext<NSURL *> *)withArchiveExtractedFromStream:(IDBProcessInput *)input compression:(FBCompressionFormat)compression
 {
   return [self withArchiveExtractedFromStream:input compression:compression overrideModificationTime:NO];
 }
 
-- (FBFutureContext<NSURL *> *)withArchiveExtractedFromStream:(FBProcessInput *)input compression:(FBCompressionFormat)compression overrideModificationTime:(BOOL)overrideMTime
+- (FBFutureContext<NSURL *> *)withArchiveExtractedFromStream:(IDBProcessInput *)input compression:(FBCompressionFormat)compression overrideModificationTime:(BOOL)overrideMTime
 {
   return [[self
     withTemporaryDirectory]

@@ -53,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param launchFuture a future that resolves when the Application has finished launching.
  @return a new Application Operation.
  */
-+ (FBFuture<FBSimulatorLaunchedApplication *> *)applicationWithSimulator:(FBSimulator *)simulator configuration:(FBApplicationLaunchConfiguration *)configuration attachment:(FBProcessFileAttachment *)attachment launchFuture:(FBFuture<NSNumber *> *)launchFuture;
++ (FBFuture<FBSimulatorLaunchedApplication *> *)applicationWithSimulator:(FBSimulator *)simulator configuration:(FBApplicationLaunchConfiguration *)configuration attachment:(IDBProcessFileAttachment *)attachment launchFuture:(FBFuture<NSNumber *> *)launchFuture;
 
 @end
 

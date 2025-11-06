@@ -12,16 +12,16 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol FBControlCoreLogger;
-@class FBProcessFetcher;
-@class FBProcessInfo;
+@class IDBProcessFetcher;
+@class IDBProcessInfo;
 
 /**
  An Option Set for Process Termination.
  */
-typedef NS_ENUM(NSUInteger, FBProcessTerminationStrategyOptions) {
-  FBProcessTerminationStrategyOptionsCheckProcessExistsBeforeSignal = 1 << 2, /** Checks for the process to exist before signalling **/
-  FBProcessTerminationStrategyOptionsCheckDeathAfterSignal = 1 << 3, /** Waits for the process to die before returning **/
-  FBProcessTerminationStrategyOptionsBackoffToSIGKILL = 1 << 4, /** Whether to backoff to SIGKILL if a less severe signal fails **/
+typedef NS_ENUM(NSUInteger, IDBProcessTerminationStrategyOptions) {
+  IDBProcessTerminationStrategyOptionsCheckProcessExistsBeforeSignal = 1 << 2, /** Checks for the process to exist before signalling **/
+  IDBProcessTerminationStrategyOptionsCheckDeathAfterSignal = 1 << 3, /** Waits for the process to die before returning **/
+  IDBProcessTerminationStrategyOptionsBackoffToSIGKILL = 1 << 4, /** Whether to backoff to SIGKILL if a less severe signal fails **/
 };
 
 /**
@@ -29,14 +29,14 @@ typedef NS_ENUM(NSUInteger, FBProcessTerminationStrategyOptions) {
  */
 typedef struct {
   int signo;
-  FBProcessTerminationStrategyOptions options;
-} FBProcessTerminationStrategyConfiguration;
+  IDBProcessTerminationStrategyOptions options;
+} IDBProcessTerminationStrategyConfiguration;
 
 
 /**
  A Strategy that defines how to terminate Processes.
  */
-@interface FBProcessTerminationStrategy : NSObject
+@interface IDBProcessTerminationStrategy : NSObject
 
 #pragma mark Initializers
 
@@ -49,7 +49,7 @@ typedef struct {
  @param logger the logger to use.
  @return a new Process Termination Strategy instance.
  */
-+ (instancetype)strategyWithConfiguration:(FBProcessTerminationStrategyConfiguration)configuration processFetcher:(FBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger;
++ (instancetype)strategyWithConfiguration:(IDBProcessTerminationStrategyConfiguration)configuration processFetcher:(IDBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger;
 
 /**
  Creates and returns a Strategy strategyWith the default configuration.
@@ -59,7 +59,7 @@ typedef struct {
  @param logger the logger to use.
  @return a new Process Termination Strategy instance.
  */
-+ (instancetype)strategyWithProcessFetcher:(FBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger;
++ (instancetype)strategyWithProcessFetcher:(IDBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger;
 
 #pragma mark Public Methods
 

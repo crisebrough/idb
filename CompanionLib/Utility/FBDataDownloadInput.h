@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The process input that will be bridged.
  */
-@property (nonatomic, strong, readonly) FBProcessInput<id<FBDataConsumer>> *input;
+@property (nonatomic, strong, readonly) IDBProcessInput<id<FBDataConsumer>> *input;
 
 @end
 

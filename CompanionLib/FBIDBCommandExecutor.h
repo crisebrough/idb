@@ -94,7 +94,7 @@ extern FBFileContainerKind const FBFileContainerKindFramework;
  @param overrideModificationTime if YES the archive contests' `mtime` will be ignored. Current timestamp will be used as mtime of extracted files/directories.
  @return A future that resolves with the App Bundle Id
  */
-- (FBFuture<FBInstalledArtifact *> *)install_app_stream:(FBProcessInput *)input compression:(FBCompressionFormat)compression make_debuggable:(BOOL)makeDebuggable override_modification_time:(BOOL)overrideModificationTime;
+- (FBFuture<FBInstalledArtifact *> *)install_app_stream:(IDBProcessInput *)input compression:(FBCompressionFormat)compression make_debuggable:(BOOL)makeDebuggable override_modification_time:(BOOL)overrideModificationTime;
 
 /**
  Installs an xctest bundle by file path.
@@ -112,7 +112,7 @@ extern FBFileContainerKind const FBFileContainerKindFramework;
  @param skipSigningBundles pass true to skip signing xctest bundles.
  @return a Future that resolves with the xctest identifier.
  */
-- (FBFuture<FBInstalledArtifact *> *)install_xctest_app_stream:(FBProcessInput *)input skipSigningBundles:(BOOL)skipSigningBundles;
+- (FBFuture<FBInstalledArtifact *> *)install_xctest_app_stream:(IDBProcessInput *)input skipSigningBundles:(BOOL)skipSigningBundles;
 
 /**
  Installs a dylib from a file path.
@@ -129,7 +129,7 @@ extern FBFileContainerKind const FBFileContainerKindFramework;
  @param name the name of the dylib
  @return A future that resolves with the Dylib Name
  */
-- (FBFuture<FBInstalledArtifact *> *)install_dylib_stream:(FBProcessInput *)input name:(NSString *)name;
+- (FBFuture<FBInstalledArtifact *> *)install_dylib_stream:(IDBProcessInput *)input name:(NSString *)name;
 
 /**
  Installs a framework from a file path.
@@ -145,7 +145,7 @@ extern FBFileContainerKind const FBFileContainerKindFramework;
  @param input the input to pipe.
  @return A future that resolves with the Dylib Name
  */
-- (FBFuture<FBInstalledArtifact *> *)install_framework_stream:(FBProcessInput *)input;
+- (FBFuture<FBInstalledArtifact *> *)install_framework_stream:(IDBProcessInput *)input;
 
 /**
  Installs a dSYM from a file path.
@@ -164,7 +164,7 @@ extern FBFileContainerKind const FBFileContainerKindFramework;
  @param linkTo if specified installed dsym will be linked into bundle container.
  @return A future that resolves with the directory containing the dSYM(s)
  */
-- (FBFuture<FBInstalledArtifact *> *)install_dsym_stream:(FBProcessInput *)input compression:(FBCompressionFormat)compression linkTo:(nullable FBDsymInstallLinkToBundle *)linkTo;
+- (FBFuture<FBInstalledArtifact *> *)install_dsym_stream:(IDBProcessInput *)input compression:(FBCompressionFormat)compression linkTo:(nullable FBDsymInstallLinkToBundle *)linkTo;
 
 /**
  Takes a Screenshot
@@ -299,6 +299,12 @@ This enables the permission popup the first time we open a deeplink
  */
 - (FBFuture<NSArray<NSString *> *> *)list_tests_in_bundle:(NSString *)bundleID with_app:(nullable NSString *)appPath;
 
+/**
+ List the tests in an installed bundle using the file path of the bundle.
+ @return a Future that resolves with names of tests in the bundle.
+ */
+ - (FBFuture<NSArray<NSString *> *> *)list_tests_in_bundle_file_path:(NSURL *)bundlePath;
+ 
 /**
  Uninstall an application
 
@@ -558,7 +564,7 @@ This enables the permission popup the first time we open a deeplink
  @param stdOut where the dap process writes
  @return A Future that resolves when the dap server is spawned. Returns the dap server process.
  */
-- (FBFuture<FBProcess<id, id<FBDataConsumer>, NSString *> *> *) dapServerWithPath:(NSString *)dapPath stdIn:(FBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut;
+- (FBFuture<IDBProcess<id, id<FBDataConsumer>, NSString *> *> *) dapServerWithPath:(NSString *)dapPath stdIn:(IDBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut;
 
 /**
  Simulates a memory warning

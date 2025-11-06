@@ -21,17 +21,17 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The attachment for stdin.
  */
-@property (nonatomic, strong, nullable, readonly) FBProcessStreamAttachment *stdIn;
+@property (nonatomic, strong, nullable, readonly) IDBProcessStreamAttachment *stdIn;
 
 /**
  The attachment for stdout.
  */
-@property (nonatomic, strong, nullable, readonly) FBProcessStreamAttachment *stdOut;
+@property (nonatomic, strong, nullable, readonly) IDBProcessStreamAttachment *stdOut;
 
 /**
  The attachment for stderr.
  */
-@property (nonatomic, strong, nullable, readonly) FBProcessStreamAttachment *stdErr;
+@property (nonatomic, strong, nullable, readonly) IDBProcessStreamAttachment *stdErr;
 
 /**
  Detach from all the streams.
@@ -44,17 +44,17 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  A result of "attaching" to an IO object, realized as file paths.
  */
-@interface FBProcessFileAttachment : NSObject
+@interface IDBProcessFileAttachment : NSObject
 
 /**
  The attachment for stdout.
  */
-@property (nonatomic, strong, nullable, readonly) id<FBProcessFileOutput> stdOut;
+@property (nonatomic, strong, nullable, readonly) id<IDBProcessFileOutput> stdOut;
 
 /**
  The attachment for stderr.
  */
-@property (nonatomic, strong, nullable, readonly) id<FBProcessFileOutput> stdErr;
+@property (nonatomic, strong, nullable, readonly) id<IDBProcessFileOutput> stdErr;
 
 /**
  Detach from all the streams.
@@ -79,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param stdErr the stderr.
  @return a new FBProcessIO instance.
  */
-- (instancetype)initWithStdIn:(nullable FBProcessInput<StdInType> *)stdIn stdOut:(nullable FBProcessOutput<StdOutType> *)stdOut stdErr:(nullable FBProcessOutput<StdErrType> *)stdErr;
+- (instancetype)initWithStdIn:(nullable IDBProcessInput<StdInType> *)stdIn stdOut:(nullable IDBProcessOutput<StdOutType> *)stdOut stdErr:(nullable IDBProcessOutput<StdErrType> *)stdErr;
 
 /**
  An IO object that accepts no input and returns no output.
@@ -89,19 +89,19 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Properties
 
 /**
- The FBProcessInput for stdin.
+ The IDBProcessInput for stdin.
  */
-@property (nonatomic, strong, nullable, readonly) FBProcessInput<StdInType> *stdIn;
+@property (nonatomic, strong, nullable, readonly) IDBProcessInput<StdInType> *stdIn;
 
 /**
-The FBProcessOutput for stdout.
+The IDBProcessOutput for stdout.
  */
-@property (nonatomic, strong, nullable, readonly) FBProcessOutput<StdOutType> *stdOut;
+@property (nonatomic, strong, nullable, readonly) IDBProcessOutput<StdOutType> *stdOut;
 
 /**
- The FBProcessOutput for stderr.
+ The IDBProcessOutput for stderr.
  */
-@property (nonatomic, strong, nullable, readonly) FBProcessOutput<StdErrType> *stdErr;
+@property (nonatomic, strong, nullable, readonly) IDBProcessOutput<StdErrType> *stdErr;
 
 /**
  The queue to use.
@@ -123,7 +123,7 @@ The FBProcessOutput for stdout.
  Will error if any of the stream attachments error.
  If any of the stream attachments error, then any succeeding attachments will detach.
  */
-- (FBFuture<FBProcessFileAttachment *> *)attachViaFile;
+- (FBFuture<IDBProcessFileAttachment *> *)attachViaFile;
 
 @end
 

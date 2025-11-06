@@ -20,11 +20,11 @@
 
 static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
-#pragma mark FBProcessStreamAttachment
+#pragma mark IDBProcessStreamAttachment
 
-@implementation FBProcessStreamAttachment
+@implementation IDBProcessStreamAttachment
 
-- (instancetype)initWithFileDescriptor:(int)fileDescriptor closeOnEndOfFile:(BOOL)closeOnEndOfFile mode:(FBProcessStreamAttachmentMode)mode
+- (instancetype)initWithFileDescriptor:(int)fileDescriptor closeOnEndOfFile:(BOOL)closeOnEndOfFile mode:(IDBProcessStreamAttachmentMode)mode
 {
   self = [super init];
   if (!self) {
@@ -46,30 +46,30 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 }
 @end
 
-#pragma mark FBProcessFileOutput
+#pragma mark IDBProcessFileOutput
 
-@interface FBProcessFileOutput_DirectToFile : NSObject <FBProcessFileOutput>
+@interface IDBProcessFileOutput_DirectToFile : NSObject <IDBProcessFileOutput>
 
 @end
 
-@interface FBProcessFileOutput_Consumer : NSObject <FBProcessFileOutput>
+@interface IDBProcessFileOutput_Consumer : NSObject <IDBProcessFileOutput>
 
 @property (nonatomic, strong, readonly) id<FBDataConsumer> consumer;
-@property (nonatomic, strong, nullable, readwrite) FBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task;
+@property (nonatomic, strong, nullable, readwrite) IDBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task;
 @property (nonatomic, strong, readonly) dispatch_queue_t queue;
 
 @end
 
-@interface FBProcessFileOutput_Reader : NSObject <FBProcessFileOutput>
+@interface IDBProcessFileOutput_Reader : NSObject <IDBProcessFileOutput>
 
-@property (nonatomic, strong, readonly) FBProcessOutput *output;
+@property (nonatomic, strong, readonly) IDBProcessOutput *output;
 @property (nonatomic, strong, nullable, readwrite) id<FBDataConsumer> writer;
-@property (nonatomic, strong, nullable, readwrite) id<FBProcessFileOutput> nested;
+@property (nonatomic, strong, nullable, readwrite) id<IDBProcessFileOutput> nested;
 @property (nonatomic, strong, readonly) dispatch_queue_t queue;
 
 @end
 
-@implementation FBProcessFileOutput_DirectToFile
+@implementation IDBProcessFileOutput_DirectToFile
 
 @synthesize filePath = _filePath;
 
@@ -87,7 +87,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return self;
 }
 
-#pragma mark FBProcessFileOutput
+#pragma mark IDBProcessFileOutput
 
 - (FBFuture<NSNull *> *)startReading
 {
@@ -112,7 +112,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessFileOutput_Consumer
+@implementation IDBProcessFileOutput_Consumer
 
 @synthesize filePath = _filePath;
 
@@ -132,24 +132,24 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return self;
 }
 
-#pragma mark FBProcessFileOutput
+#pragma mark IDBProcessFileOutput
 
 - (FBFuture<NSNull *> *)startReading
 {
   return [[FBFuture
-    onQueue:self.queue resolve:^ FBFuture<FBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *> *{
+    onQueue:self.queue resolve:^ FBFuture<IDBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *> *{
       if (self.task) {
         return [[FBControlCoreError
           describeFormat:@"Cannot start reading, already reading"]
           failFuture];
       }
-      return [[[[FBProcessBuilder
+      return [[[[IDBProcessBuilder
         withLaunchPath:@"/bin/cat" arguments:@[self.filePath]]
         withStdOutConsumer:self.consumer]
         withStdErrToDevNull]
         start];
     }]
-    onQueue:self.queue map:^(FBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task) {
+    onQueue:self.queue map:^(IDBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task) {
       self.task = task;
       return NSNull.null;
     }];
@@ -159,7 +159,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 {
   return [[FBFuture
     onQueue:self.queue resolve:^ FBFuture<NSNumber *> *{
-      FBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task = self.task;
+      IDBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task = self.task;
       self.task = nil;
       if (!task) {
         return [[FBControlCoreError
@@ -180,13 +180,13 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessFileOutput_Reader
+@implementation IDBProcessFileOutput_Reader
 
 @synthesize filePath = _filePath;
 
 #pragma mark Initializers
 
-- (instancetype)initWithOutput:(FBProcessOutput *)output filePath:(NSString *)filePath queue:(dispatch_queue_t)queue
+- (instancetype)initWithOutput:(IDBProcessOutput *)output filePath:(NSString *)filePath queue:(dispatch_queue_t)queue
 {
   self = [super init];
   if (!self) {
@@ -200,12 +200,12 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return self;
 }
 
-#pragma mark FBProcessFileOutput
+#pragma mark IDBProcessFileOutput
 
 - (FBFuture<NSNull *> *)startReading
 {
   return [[[[[FBFuture
-    onQueue:self.queue resolve:^ FBFuture<FBProcessStreamAttachment *> * {
+    onQueue:self.queue resolve:^ FBFuture<IDBProcessStreamAttachment *> * {
       if (self.writer || self.nested) {
         return [[FBControlCoreError
           describe:@"Cannot call startReading twice"]
@@ -213,15 +213,15 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
       }
       return [self.output attach];
     }]
-    onQueue:self.queue map:^ id<FBDataConsumer>  (FBProcessStreamAttachment *attachment) {
+    onQueue:self.queue map:^ id<FBDataConsumer>  (IDBProcessStreamAttachment *attachment) {
       return [FBFileWriter syncWriterWithFileDescriptor:attachment.fileDescriptor closeOnEndOfFile:attachment.closeOnEndOfFile];
     }]
-    onQueue:self.queue fmap:^ FBFuture<id<FBProcessFileOutput>> * (id<FBDataConsumer> writer) {
+    onQueue:self.queue fmap:^ FBFuture<id<IDBProcessFileOutput>> * (id<FBDataConsumer> writer) {
       self.writer = writer;
-      id<FBProcessFileOutput> consumer = [[FBProcessFileOutput_Consumer alloc] initWithConsumer:writer filePath:self.filePath queue:self.queue];
+      id<IDBProcessFileOutput> consumer = [[IDBProcessFileOutput_Consumer alloc] initWithConsumer:writer filePath:self.filePath queue:self.queue];
       return [[consumer startReading] mapReplace:consumer];
     }]
-    onQueue:self.queue map:^ NSNull * (id<FBProcessFileOutput> nested) {
+    onQueue:self.queue map:^ NSNull * (id<IDBProcessFileOutput> nested) {
       self.nested = nested;
       return NSNull.null;
     }]
@@ -255,19 +255,19 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-#pragma mark - FBProcessOutput
+#pragma mark - IDBProcessOutput
 
-@interface FBProcessOutput ()
+@interface IDBProcessOutput ()
 
 @property (nonatomic, strong, readonly) dispatch_queue_t workQueue;
 
 @end
 
-@interface FBProcessOutput_Null : FBProcessOutput
+@interface IDBProcessOutput_Null : IDBProcessOutput
 
 @end
 
-@interface FBProcessOutput_FilePath : FBProcessOutput
+@interface IDBProcessOutput_FilePath : IDBProcessOutput
 
 @property (nonatomic, copy, readonly) NSString *filePath;
 @property (nonatomic, assign, readwrite) int fileDescriptor;
@@ -276,23 +276,23 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@interface FBProcessOutput_Pipe : FBProcessOutput
+@interface IDBProcessOutput_Pipe : IDBProcessOutput
 
 @property (nonatomic, assign, readwrite) int readEnd;
 @property (nonatomic, assign, readwrite) int writeEnd;
 
 @end
 
-@class NSInputStream_FBProcessOutput;
+@class NSInputStream_IDBProcessOutput;
 
-@interface FBProcessOutput_InputStream : FBProcessOutput_Pipe
+@interface IDBProcessOutput_InputStream : IDBProcessOutput_Pipe
 
 @property (nonatomic, strong, readonly) FBMutableFuture<NSNumber *> *readFuture;
-@property (nonatomic, strong, readonly) NSInputStream_FBProcessOutput *stream;
+@property (nonatomic, strong, readonly) NSInputStream_IDBProcessOutput *stream;
 
 @end
 
-@interface NSInputStream_FBProcessOutput : NSInputStream
+@interface NSInputStream_IDBProcessOutput : NSInputStream
 
 @property (nonatomic, strong, readonly) FBFuture<NSNumber *> *readFuture;
 @property (nonatomic, assign, readwrite) int fileDescriptor;
@@ -301,7 +301,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@interface FBProcessOutput_Consumer : FBProcessOutput_Pipe
+@interface IDBProcessOutput_Consumer : IDBProcessOutput_Pipe
 
 @property (nonatomic, strong, readwrite) id<FBDataConsumer> consumer;
 @property (nonatomic, strong, nullable, readwrite) FBFileReader *reader;
@@ -311,13 +311,13 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@interface FBProcessOutput_Logger : FBProcessOutput_Consumer
+@interface IDBProcessOutput_Logger : IDBProcessOutput_Consumer
 
 - (instancetype)initWithLogger:(id<FBControlCoreLogger>)logger;
 
 @end
 
-@interface FBProcessOutput_Data : FBProcessOutput_Consumer
+@interface IDBProcessOutput_Data : IDBProcessOutput_Consumer
 
 @property (nonatomic, strong, readonly) id<FBAccumulatingBuffer> dataConsumer;
 
@@ -325,11 +325,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@interface FBProcessOutput_String : FBProcessOutput_Data
+@interface IDBProcessOutput_String : IDBProcessOutput_Data
 
 @end
 
-@implementation FBProcessOutput
+@implementation IDBProcessOutput
 
 #pragma mark Initializers
 
@@ -338,49 +338,49 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return dispatch_queue_create("com.facebook.fbcontrolcore.process_stream", DISPATCH_QUEUE_SERIAL);
 }
 
-+ (FBProcessOutput<NSNull *> *)outputForNullDevice
++ (IDBProcessOutput<NSNull *> *)outputForNullDevice
 {
-  return [[FBProcessOutput_Null alloc] init];
+  return [[IDBProcessOutput_Null alloc] init];
 }
 
-+ (FBProcessOutput<NSString *> *)outputForFilePath:(NSString *)filePath
++ (IDBProcessOutput<NSString *> *)outputForFilePath:(NSString *)filePath
 {
-  return [[FBProcessOutput_FilePath alloc] initWithFilePath:filePath];
+  return [[IDBProcessOutput_FilePath alloc] initWithFilePath:filePath];
 }
 
-+ (FBProcessOutput<NSInputStream *> *)outputToInputStream
++ (IDBProcessOutput<NSInputStream *> *)outputToInputStream
 {
-  return [[FBProcessOutput_InputStream alloc] init];
+  return [[IDBProcessOutput_InputStream alloc] init];
 }
 
-+ (FBProcessOutput<id<FBDataConsumer>> *)outputForDataConsumer:(id<FBDataConsumer>)dataConsumer logger:(id<FBControlCoreLogger>)logger
++ (IDBProcessOutput<id<FBDataConsumer>> *)outputForDataConsumer:(id<FBDataConsumer>)dataConsumer logger:(id<FBControlCoreLogger>)logger
 {
-  return [[FBProcessOutput_Consumer alloc] initWithConsumer:dataConsumer logger:logger];
+  return [[IDBProcessOutput_Consumer alloc] initWithConsumer:dataConsumer logger:logger];
 }
 
-+ (FBProcessOutput<id<FBDataConsumer>> *)outputForDataConsumer:(id<FBDataConsumer>)dataConsumer
++ (IDBProcessOutput<id<FBDataConsumer>> *)outputForDataConsumer:(id<FBDataConsumer>)dataConsumer
 {
-  return [[FBProcessOutput_Consumer alloc] initWithConsumer:dataConsumer logger:nil];
+  return [[IDBProcessOutput_Consumer alloc] initWithConsumer:dataConsumer logger:nil];
 }
 
-+ (FBProcessOutput<id<FBControlCoreLogger>> *)outputForLogger:(id<FBControlCoreLogger>)logger
++ (IDBProcessOutput<id<FBControlCoreLogger>> *)outputForLogger:(id<FBControlCoreLogger>)logger
 {
-  return [[FBProcessOutput_Logger alloc] initWithLogger:logger];
+  return [[IDBProcessOutput_Logger alloc] initWithLogger:logger];
 }
 
-+ (FBProcessOutput<NSMutableData *> *)outputToMutableData:(NSMutableData *)data
++ (IDBProcessOutput<NSMutableData *> *)outputToMutableData:(NSMutableData *)data
 {
-  return [[FBProcessOutput_Data alloc] initWithMutableData:data];
+  return [[IDBProcessOutput_Data alloc] initWithMutableData:data];
 }
 
-+ (FBProcessOutput<NSString *> *)outputToStringBackedByMutableData:(NSMutableData *)data
++ (IDBProcessOutput<NSString *> *)outputToStringBackedByMutableData:(NSMutableData *)data
 {
-  return [[FBProcessOutput_String alloc] initWithMutableData:data];
+  return [[IDBProcessOutput_String alloc] initWithMutableData:data];
 }
 
 - (instancetype)init
 {
-  return [self initWithWorkQueue:FBProcessOutput.createWorkQueue];
+  return [self initWithWorkQueue:IDBProcessOutput.createWorkQueue];
 }
 
 - (instancetype)initWithWorkQueue:(dispatch_queue_t)workQueue
@@ -397,7 +397,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 #pragma mark FBStandardStream
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   NSAssert(NO, @"-[%@ %@] is abstract and should be overridden", NSStringFromClass(self.class), NSStringFromSelector(_cmd));
   return nil;
@@ -415,14 +415,14 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return nil;
 }
 
-#pragma mark FBProcessOutput implementation
+#pragma mark IDBProcessOutput implementation
 
-- (FBFuture<id<FBProcessFileOutput>> *)providedThroughFile
+- (FBFuture<id<IDBProcessFileOutput>> *)providedThroughFile
 {
   return [[self
     makeFifoOutput]
     onQueue:self.workQueue map:^(NSString *fifoPath) {
-      return [[FBProcessFileOutput_Reader alloc] initWithOutput:self filePath:fifoPath queue:FBProcessOutput.createWorkQueue];
+      return [[IDBProcessFileOutput_Reader alloc] initWithOutput:self filePath:fifoPath queue:IDBProcessOutput.createWorkQueue];
     }];
 }
 
@@ -448,13 +448,13 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessOutput_Null
+@implementation IDBProcessOutput_Null
 
 #pragma mark FBStandardStream
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
-  return [FBFuture futureWithResult:[[FBProcessStreamAttachment alloc] initWithFileDescriptor:-1 closeOnEndOfFile:NO mode:FBProcessStreamAttachmentModeOutput]];
+  return [FBFuture futureWithResult:[[IDBProcessStreamAttachment alloc] initWithFileDescriptor:-1 closeOnEndOfFile:NO mode:IDBProcessStreamAttachmentModeOutput]];
 }
 
 - (FBFuture<NSNull *> *)detach
@@ -467,11 +467,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return NSNull.null;
 }
 
-#pragma mark FBProcessOutput Implementation
+#pragma mark IDBProcessOutput Implementation
 
-- (FBFuture<id<FBProcessFileOutput>> *)providedThroughFile
+- (FBFuture<id<IDBProcessFileOutput>> *)providedThroughFile
 {
-  return [FBFuture futureWithResult:[[FBProcessFileOutput_DirectToFile alloc] initWithFilePath:@"/dev/null"]];
+  return [FBFuture futureWithResult:[[IDBProcessFileOutput_DirectToFile alloc] initWithFilePath:@"/dev/null"]];
 }
 
 - (FBFuture<id<FBDataConsumer>> *)providedThroughConsumer
@@ -488,11 +488,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessOutput_Pipe
+@implementation IDBProcessOutput_Pipe
 
 #pragma mark FBStandardStream
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   return [FBFuture
     onQueue:self.workQueue resolve:^{
@@ -511,7 +511,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
       self.readEnd = fileDescriptors[0];
       self.writeEnd = fileDescriptors[1];
       // Pass out the write end in the attachment, for the caller to write to.
-      return [FBFuture futureWithResult:[[FBProcessStreamAttachment alloc] initWithFileDescriptor:fileDescriptors[1] closeOnEndOfFile:YES mode:FBProcessStreamAttachmentModeOutput]];
+      return [FBFuture futureWithResult:[[IDBProcessStreamAttachment alloc] initWithFileDescriptor:fileDescriptors[1] closeOnEndOfFile:YES mode:IDBProcessStreamAttachmentModeOutput]];
     }];
 }
 
@@ -548,7 +548,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessOutput_InputStream
+@implementation IDBProcessOutput_InputStream
 
 - (instancetype)init
 {
@@ -558,7 +558,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   }
 
   _readFuture = FBMutableFuture.future;
-  _stream = [[NSInputStream_FBProcessOutput alloc] initWithReadFuture:_readFuture];
+  _stream = [[NSInputStream_IDBProcessOutput alloc] initWithReadFuture:_readFuture];
 
   return self;
 }
@@ -570,11 +570,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return self.stream;
 }
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   return [[super
     attach]
-    onQueue:self.workQueue map:^(FBProcessStreamAttachment *result) {
+    onQueue:self.workQueue map:^(IDBProcessStreamAttachment *result) {
       [self.readFuture resolveWithResult:@(self.readEnd)];
       return result;
     }];
@@ -589,7 +589,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation NSInputStream_FBProcessOutput
+@implementation NSInputStream_IDBProcessOutput
 
 - (instancetype)initWithReadFuture:(FBFuture<NSNumber *> *)readFuture
 {
@@ -635,7 +635,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessOutput_Consumer
+@implementation IDBProcessOutput_Consumer
 
 #pragma mark Initializers
 
@@ -654,11 +654,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 #pragma mark FBStandardStream
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   return [[super
     attach]
-    onQueue:self.workQueue fmap:^(FBProcessStreamAttachment *attachment) {
+    onQueue:self.workQueue fmap:^(IDBProcessStreamAttachment *attachment) {
       if (self.reader) {
         return [[FBControlCoreError
           describeFormat:@"Cannot attach to %@ twice", self]
@@ -676,7 +676,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
         ]];
       }
 
-      // FBProcessOuput consumes the read end, the write end is passed out in the attachment.
+      // IDBProcessOuput consumes the read end, the write end is passed out in the attachment.
       self.reader = [FBFileReader readerWithFileDescriptor:self.readEnd closeOnEndOfFile:YES consumer:consumer logger:self.logger];
       return [[[self.reader
         startReading]
@@ -712,14 +712,14 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return self.consumer;
 }
 
-#pragma mark FBProcessOutput Implementation
+#pragma mark IDBProcessOutput Implementation
 
-- (FBFuture<id<FBProcessFileOutput>> *)providedThroughFile
+- (FBFuture<id<IDBProcessFileOutput>> *)providedThroughFile
 {
   return [[[self
     makeFifoOutput]
-    onQueue:self.workQueue map:^ id<FBProcessFileOutput> (NSString *fifoPath) {
-      return [[FBProcessFileOutput_Consumer alloc] initWithConsumer:self.consumer filePath:fifoPath queue:FBProcessOutput.createWorkQueue];
+    onQueue:self.workQueue map:^ id<IDBProcessFileOutput> (NSString *fifoPath) {
+      return [[IDBProcessFileOutput_Consumer alloc] initWithConsumer:self.consumer filePath:fifoPath queue:IDBProcessOutput.createWorkQueue];
     }]
     nameFormat:@"Relay %@ to file", self.description];
 }
@@ -738,7 +738,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessOutput_Logger
+@implementation IDBProcessOutput_Logger
 
 #pragma mark Initializers
 
@@ -769,7 +769,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessOutput_FilePath
+@implementation IDBProcessOutput_FilePath
 
 #pragma mark Initializers
 
@@ -787,7 +787,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 #pragma mark FBStandardStream
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   return [[FBFuture
     onQueue:self.workQueue resolve:^{
@@ -805,7 +805,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
           failFuture];
       }
       self.fileDescriptor = fileDescriptor;
-      return [FBFuture futureWithResult:[[FBProcessStreamAttachment alloc] initWithFileDescriptor:fileDescriptor closeOnEndOfFile:YES mode:FBProcessStreamAttachmentModeOutput]];
+      return [FBFuture futureWithResult:[[IDBProcessStreamAttachment alloc] initWithFileDescriptor:fileDescriptor closeOnEndOfFile:YES mode:IDBProcessStreamAttachmentModeOutput]];
     }]
     nameFormat:@"Attach to %@", self.description];
 }
@@ -832,11 +832,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return self.filePath;
 }
 
-#pragma mark FBProcessOutput Implementation
+#pragma mark IDBProcessOutput Implementation
 
-- (FBFuture<id<FBProcessFileOutput>> *)providedThroughFile
+- (FBFuture<id<IDBProcessFileOutput>> *)providedThroughFile
 {
-  return [FBFuture futureWithResult:[[FBProcessFileOutput_DirectToFile alloc] initWithFilePath:self.filePath]];
+  return [FBFuture futureWithResult:[[IDBProcessFileOutput_DirectToFile alloc] initWithFilePath:self.filePath]];
 }
 
 - (FBFuture<id<FBDataConsumer>> *)providedThroughConsumer
@@ -853,7 +853,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessOutput_Data
+@implementation IDBProcessOutput_Data
 
 #pragma mark Initializers
 
@@ -886,7 +886,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessOutput_String
+@implementation IDBProcessOutput_String
 
 #pragma mark FBStandardStream
 
@@ -914,7 +914,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@interface FBProcessInput ()
+@interface IDBProcessInput ()
 
 @property (nonatomic, strong, readonly) dispatch_queue_t workQueue;
 @property (nonatomic, assign, readwrite) int readEnd;
@@ -922,13 +922,13 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@interface FBProcessInput_Consumer : FBProcessInput <FBDataConsumer>
+@interface IDBProcessInput_Consumer : IDBProcessInput <FBDataConsumer>
 
 @property (nonatomic, strong, nullable, readwrite) id<FBDataConsumer> writer;
 
 @end
 
-@interface FBProcessInput_Data : FBProcessInput_Consumer
+@interface IDBProcessInput_Data : IDBProcessInput_Consumer
 
 - (instancetype)initWithData:(NSData *)data;
 
@@ -936,16 +936,16 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@class NSOutputStream_FBProcessInput;
+@class NSOutputStream_IDBProcessInput;
 
-@interface FBProcessInput_InputStream : FBProcessInput <FBStandardStreamTransfer>
+@interface IDBProcessInput_InputStream : IDBProcessInput <FBStandardStreamTransfer>
 
-@property (nonatomic, strong, readonly) NSOutputStream_FBProcessInput *stream;
+@property (nonatomic, strong, readonly) NSOutputStream_IDBProcessInput *stream;
 @property (nonatomic, strong, readonly) FBMutableFuture<NSNumber *> *writeFuture;
 
 @end
 
-@interface NSOutputStream_FBProcessInput : NSOutputStream
+@interface NSOutputStream_IDBProcessInput : NSOutputStream
 
 @property (nonatomic, strong, readonly) FBFuture<NSNumber *> *writeFuture;
 @property (nonatomic, assign, readwrite) int fileDescriptor;
@@ -957,28 +957,28 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessInput
+@implementation IDBProcessInput
 
 #pragma mark Initializers
 
-+ (FBProcessInput<id<FBDataConsumer>> *)inputFromConsumer
++ (IDBProcessInput<id<FBDataConsumer>> *)inputFromConsumer
 {
-  return [[FBProcessInput_Consumer alloc] init];
+  return [[IDBProcessInput_Consumer alloc] init];
 }
 
-+ (FBProcessInput<NSOutputStream *> *)inputFromStream
++ (IDBProcessInput<NSOutputStream *> *)inputFromStream
 {
-  return [[FBProcessInput_InputStream alloc] init];
+  return [[IDBProcessInput_InputStream alloc] init];
 }
 
-+ (FBProcessInput<NSData *> *)inputFromData:(NSData *)data
++ (IDBProcessInput<NSData *> *)inputFromData:(NSData *)data
 {
-  return [[FBProcessInput_Data alloc] initWithData:data];
+  return [[IDBProcessInput_Data alloc] initWithData:data];
 }
 
 - (instancetype)init
 {
-  return [self initWithWorkQueue:FBProcessOutput.createWorkQueue];
+  return [self initWithWorkQueue:IDBProcessOutput.createWorkQueue];
 }
 
 - (instancetype)initWithWorkQueue:(dispatch_queue_t)workQueue
@@ -995,7 +995,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 #pragma mark FBStandardStream
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   return [[FBFuture
     onQueue:self.workQueue resolve:^{
@@ -1016,7 +1016,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
       // Pass out the read end as input to a process.
       // Subclases will write to the write end.
-      return [FBFuture futureWithResult:[[FBProcessStreamAttachment alloc] initWithFileDescriptor:self.readEnd closeOnEndOfFile:YES mode:FBProcessStreamAttachmentModeInput]];
+      return [FBFuture futureWithResult:[[IDBProcessStreamAttachment alloc] initWithFileDescriptor:self.readEnd closeOnEndOfFile:YES mode:IDBProcessStreamAttachmentModeInput]];
     }]
     nameFormat:@"Attach %@ to pipe", self.description];
 }
@@ -1056,7 +1056,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessInput_Consumer
+@implementation IDBProcessInput_Consumer
 
 #pragma mark FBStandardStream
 
@@ -1065,11 +1065,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return self;
 }
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   return [[[super
     attach]
-    onQueue:self.workQueue fmap:^(FBProcessStreamAttachment *attachment) {
+    onQueue:self.workQueue fmap:^(IDBProcessStreamAttachment *attachment) {
       NSError *error = nil;
       // Construct a writer to write to, on eof the file descriptor is closed and the reading continues on the other side of the pipe.
       // The read end is closed in the superclassess detach.
@@ -1116,7 +1116,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessInput_Data
+@implementation IDBProcessInput_Data
 
 #pragma mark Initializers
 
@@ -1134,11 +1134,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 #pragma mark FBStandardStream
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   return [[[super
     attach]
-    onQueue:self.workQueue map:^(FBProcessStreamAttachment *attachment) {
+    onQueue:self.workQueue map:^(IDBProcessStreamAttachment *attachment) {
       [self.writer consumeData:self.data];
       [self.writer consumeEndOfFile];
       return attachment;
@@ -1160,7 +1160,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation FBProcessInput_InputStream
+@implementation IDBProcessInput_InputStream
 
 #pragma mark Initializers
 
@@ -1172,7 +1172,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   }
 
   _writeFuture = FBMutableFuture.future;
-  _stream = [[NSOutputStream_FBProcessInput alloc] initWithWriteFuture:_writeFuture];
+  _stream = [[NSOutputStream_IDBProcessInput alloc] initWithWriteFuture:_writeFuture];
 
   return self;
 }
@@ -1184,11 +1184,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
   return self.stream;
 }
 
-- (FBFuture<FBProcessStreamAttachment *> *)attach
+- (FBFuture<IDBProcessStreamAttachment *> *)attach
 {
   return [[super
     attach]
-    onQueue:self.workQueue map:^(FBProcessStreamAttachment *attachment) {
+    onQueue:self.workQueue map:^(IDBProcessStreamAttachment *attachment) {
       [self.writeFuture resolveWithResult:@(self.writeEnd)];
       return attachment;
     }];
@@ -1214,7 +1214,7 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 
 @end
 
-@implementation NSOutputStream_FBProcessInput
+@implementation NSOutputStream_IDBProcessInput
 
 #pragma mark Initializers
 

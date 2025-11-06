@@ -10,7 +10,7 @@
 
 @class FBApplicationLaunchConfiguration;
 @class FBBundleDescriptor;
-@class FBProcessInfo;
+@class IDBProcessInfo;
 @class FBProcessSpawnConfiguration;
 @class FBTestLaunchConfiguration;
 

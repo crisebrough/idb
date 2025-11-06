@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class FBDeviceType;
 @class FBOSVersion;
-@class FBProcessInfo;
+@class IDBProcessInfo;
 @class FBTemporaryDirectory;
 @class FBiOSTargetDiagnostics;
 @class FBiOSTargetScreenInfo;

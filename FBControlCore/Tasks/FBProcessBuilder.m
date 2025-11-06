@@ -16,19 +16,19 @@
 #import "FBProcess.h"
 #import "FBProcessSpawnConfiguration.h"
 
-@interface FBProcessBuilder ()
+@interface IDBProcessBuilder ()
 
 @property (nonatomic, copy, readwrite) NSString *launchPath;
 @property (nonatomic, copy, readwrite) NSArray<NSString *> *arguments;
 @property (nonatomic, copy, readwrite) NSDictionary<NSString *, NSString *> *environment;
-@property (nonatomic, strong, nullable, readwrite) FBProcessOutput *stdOut;
-@property (nonatomic, strong, nullable, readwrite) FBProcessOutput *stdErr;
-@property (nonatomic, strong, nullable, readwrite) FBProcessInput *stdIn;
+@property (nonatomic, strong, nullable, readwrite) IDBProcessOutput *stdOut;
+@property (nonatomic, strong, nullable, readwrite) IDBProcessOutput *stdErr;
+@property (nonatomic, strong, nullable, readwrite) IDBProcessInput *stdIn;
 @property (nonatomic, strong, nullable, readwrite) id<FBControlCoreLogger> logger;
 
 @end
 
-@implementation FBProcessBuilder
+@implementation IDBProcessBuilder
 
 #pragma mark Initializers
 
@@ -41,9 +41,9 @@
 
   _launchPath = launchPath;
   _arguments = @[];
-  _environment = FBProcessBuilder.defaultEnvironmentForSubprocess;
-  _stdOut = [FBProcessOutput outputToStringBackedByMutableData:NSMutableData.data];
-  _stdErr = [FBProcessOutput outputToStringBackedByMutableData:NSMutableData.data];
+  _environment = IDBProcessBuilder.defaultEnvironmentForSubprocess;
+  _stdOut = [IDBProcessOutput outputToStringBackedByMutableData:NSMutableData.data];
+  _stdErr = [IDBProcessOutput outputToStringBackedByMutableData:NSMutableData.data];
   _stdIn = nil;
   _logger = nil;
 
@@ -96,7 +96,7 @@
 
 #pragma mark stdin
 
-- (instancetype)withStdIn:(FBProcessInput *)input
+- (instancetype)withStdIn:(IDBProcessInput *)input
 {
   self.stdIn = input;
   return self;
@@ -104,13 +104,13 @@
 
 - (instancetype)withStdInConnected
 {
-  self.stdIn = [FBProcessInput inputFromConsumer];
+  self.stdIn = [IDBProcessInput inputFromConsumer];
   return self;
 }
 
 - (instancetype)withStdInFromData:(NSData *)data
 {
-  self.stdIn = [FBProcessInput inputFromData:data];
+  self.stdIn = [IDBProcessInput inputFromData:data];
   return self;
 }
 
@@ -118,20 +118,20 @@
 
 - (instancetype)withStdOutInMemoryAsData
 {
-  self.stdOut = [FBProcessOutput outputToMutableData:NSMutableData.data];
+  self.stdOut = [IDBProcessOutput outputToMutableData:NSMutableData.data];
   return self;
 }
 
 - (instancetype)withStdOutInMemoryAsString
 {
-  self.stdOut = [FBProcessOutput outputToStringBackedByMutableData:NSMutableData.data];
+  self.stdOut = [IDBProcessOutput outputToStringBackedByMutableData:NSMutableData.data];
   return self;
 }
 
 - (instancetype)withStdOutPath:(NSString *)stdOutPath
 {
   NSParameterAssert(stdOutPath);
-  self.stdOut = [FBProcessOutput outputForFilePath:stdOutPath];
+  self.stdOut = [IDBProcessOutput outputForFilePath:stdOutPath];
   return self;
 }
 
@@ -143,13 +143,13 @@
 
 - (instancetype)withStdOutToInputStream
 {
-  self.stdOut = [FBProcessOutput outputToInputStream];
+  self.stdOut = [IDBProcessOutput outputToInputStream];
   return self;
 }
 
 - (instancetype)withStdOutConsumer:(id<FBDataConsumer>)consumer
 {
-  self.stdOut = [FBProcessOutput outputForDataConsumer:consumer];
+  self.stdOut = [IDBProcessOutput outputForDataConsumer:consumer];
   return self;
 }
 
@@ -160,13 +160,13 @@
 
 - (instancetype)withStdOutToLogger:(id<FBControlCoreLogger>)logger
 {
-  self.stdOut = [FBProcessOutput outputForLogger:logger];
+  self.stdOut = [IDBProcessOutput outputForLogger:logger];
   return self;
 }
 
 - (instancetype)withStdOutToLoggerAndErrorMessage:(id<FBControlCoreLogger>)logger
 {
-  self.stdOut = [FBProcessOutput outputForDataConsumer:[FBDataBuffer accumulatingBufferWithCapacity:FBProcessOutputErrorMessageLength] logger:logger];
+  self.stdOut = [IDBProcessOutput outputForDataConsumer:[FBDataBuffer accumulatingBufferWithCapacity:IDBProcessOutputErrorMessageLength] logger:logger];
   return self;
 }
 
@@ -174,20 +174,20 @@
 
 - (instancetype)withStdErrInMemoryAsData
 {
-  self.stdErr = [FBProcessOutput outputToMutableData:NSMutableData.data];
+  self.stdErr = [IDBProcessOutput outputToMutableData:NSMutableData.data];
   return self;
 }
 
 - (instancetype)withStdErrInMemoryAsString
 {
-  self.stdErr = [FBProcessOutput outputToStringBackedByMutableData:NSMutableData.data];
+  self.stdErr = [IDBProcessOutput outputToStringBackedByMutableData:NSMutableData.data];
   return self;
 }
 
 - (instancetype)withStdErrPath:(NSString *)stdErrPath
 {
   NSParameterAssert(stdErrPath);
-  self.stdErr = [FBProcessOutput outputForFilePath:stdErrPath];
+  self.stdErr = [IDBProcessOutput outputForFilePath:stdErrPath];
   return self;
 }
 
@@ -199,7 +199,7 @@
 
 - (instancetype)withStdErrConsumer:(id<FBDataConsumer>)consumer
 {
-  self.stdErr = [FBProcessOutput outputForDataConsumer:consumer];
+  self.stdErr = [IDBProcessOutput outputForDataConsumer:consumer];
   return self;
 }
 
@@ -210,13 +210,13 @@
 
 - (instancetype)withStdErrToLogger:(id<FBControlCoreLogger>)logger
 {
-  self.stdErr = [FBProcessOutput outputForLogger:logger];
+  self.stdErr = [IDBProcessOutput outputForLogger:logger];
   return self;
 }
 
 - (instancetype)withStdErrToLoggerAndErrorMessage:(id<FBControlCoreLogger>)logger
 {
-  self.stdErr = [FBProcessOutput outputForDataConsumer:[FBDataBuffer accumulatingBufferWithCapacity:FBProcessOutputErrorMessageLength] logger:logger];
+  self.stdErr = [IDBProcessOutput outputForDataConsumer:[FBDataBuffer accumulatingBufferWithCapacity:IDBProcessOutputErrorMessageLength] logger:logger];
   return self;
 }
 
@@ -230,17 +230,17 @@
 
 #pragma mark Building
 
-- (FBFuture<FBProcess *> *)start
+- (FBFuture<IDBProcess *> *)start
 {
-  return [FBProcess launchProcessWithConfiguration:self.buildConfiguration logger:self.logger];
+  return [IDBProcess launchProcessWithConfiguration:self.buildConfiguration logger:self.logger];
 }
 
-- (FBFuture<FBProcess *> *)runUntilCompletionWithAcceptableExitCodes:(NSSet<NSNumber *> *)exitCodes
+- (FBFuture<IDBProcess *> *)runUntilCompletionWithAcceptableExitCodes:(NSSet<NSNumber *> *)exitCodes
 {
   dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
   return [[self
     start]
-    onQueue:queue fmap:^(FBProcess *process) {
+    onQueue:queue fmap:^(IDBProcess *process) {
       return [[process exitedWithCodes:exitCodes] mapReplace:process];
     }];
 }

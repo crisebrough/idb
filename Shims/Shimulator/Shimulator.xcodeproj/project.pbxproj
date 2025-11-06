@@ -349,6 +349,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = EED62ED920D12209006E86E5 /* Shimulator.xcconfig */;
 			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 			};
 			name = Debug;
 		};
@@ -356,6 +357,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = EED62ED920D12209006E86E5 /* Shimulator.xcconfig */;
 			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 			};
 			name = Release;
 		};

@@ -69,7 +69,7 @@ static void IterateOpenFiles(pid_t *pidBuffer, size_t pidBufferSize, const char 
   });
 }
 
-static inline FBProcessInfo *ProcessInfoForProcessIdentifier(pid_t processIdentifier, char *buffer, size_t bufferSize)
+static inline IDBProcessInfo *ProcessInfoForProcessIdentifier(pid_t processIdentifier, char *buffer, size_t bufferSize)
 {
   // Much of the layout information here comes from libtop.c in Apple's top(1) Open Source implementation.
   int name[3] = {CTL_KERN, KERN_PROCARGS2, processIdentifier};
@@ -130,7 +130,7 @@ static inline FBProcessInfo *ProcessInfoForProcessIdentifier(pid_t processIdenti
     currentPosition += 1;
   }
 
-  FBProcessInfo *process = [[FBProcessInfo alloc]
+  IDBProcessInfo *process = [[IDBProcessInfo alloc]
     initWithProcessIdentifier:processIdentifier
     launchPath:launchPath
     arguments:arguments
@@ -155,7 +155,7 @@ static BOOL ProcessNameForProcessIdentifier(pid_t processIdentifier, char *buffe
   return proc_name(processIdentifier, buffer, (uint32_t) bufferSize) > 1;
 }
 
-@interface FBProcessFetcher ()
+@interface IDBProcessFetcher ()
 
 @property (nonatomic, assign, readonly) size_t argumentBufferSize;
 @property (nonatomic, assign, readonly) char *argumentBuffer;
@@ -165,7 +165,7 @@ static BOOL ProcessNameForProcessIdentifier(pid_t processIdentifier, char *buffe
 
 @end
 
-@implementation FBProcessFetcher
+@implementation IDBProcessFetcher
 
 #pragma mark Lifecycle
 
@@ -204,7 +204,7 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
 
 #pragma mark Queries
 
-- (nullable FBProcessInfo *)processInfoFor:(pid_t)processIdentifier
+- (nullable IDBProcessInfo *)processInfoFor:(pid_t)processIdentifier
 {
   return ProcessInfoForProcessIdentifier(
     processIdentifier,
@@ -213,12 +213,12 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
   );
 }
 
-- (NSArray<FBProcessInfo *> *)subprocessesOf:(pid_t)parent
+- (NSArray<IDBProcessInfo *> *)subprocessesOf:(pid_t)parent
 {
   NSMutableArray *subprocesses = [NSMutableArray array];
 
   IterateSubprocessesOf(self.pidBuffer, self.pidBufferSize, parent, ^ BOOL (pid_t pid) {
-    FBProcessInfo *info = [self processInfoFor:pid];
+    IDBProcessInfo *info = [self processInfoFor:pid];
     if (info) {
       [subprocesses addObject:info];
     }
@@ -228,7 +228,7 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
   return [subprocesses copy];
 }
 
-- (NSArray<FBProcessInfo *> *)processesWithProcessName:(NSString *)processName
+- (NSArray<IDBProcessInfo *> *)processesWithProcessName:(NSString *)processName
 {
   NSMutableArray *subprocesses = [NSMutableArray array];
   size_t bufferSize = self.argumentBufferSize;
@@ -242,7 +242,7 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
     if (strcmp(needle, buffer) != 0) {
       return YES;
     }
-    FBProcessInfo *info = [self processInfoFor:pid];
+    IDBProcessInfo *info = [self processInfoFor:pid];
     if (!info) {
       return YES;
     }
@@ -328,7 +328,7 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
 
 + (FBFuture<NSNull *> *) waitForDebuggerToAttachAndContinueFor:(pid_t)processIdentifier
 {
-  FBProcessFetcher *processFetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *processFetcher = [[IDBProcessFetcher alloc] init];
   // Report from the current queue, but wait in a special queue.
   dispatch_queue_t waitQueue = dispatch_queue_create("com.facebook.corecontrol.debugger_wait", DISPATCH_QUEUE_SERIAL);
   return [FBFuture
@@ -348,7 +348,7 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
 
 + (FBFuture<NSNull *> *) waitStopSignalForProcess:(pid_t) processIdentifier
 {
-  FBProcessFetcher *processFetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *processFetcher = [[IDBProcessFetcher alloc] init];
 
   dispatch_queue_t waitQueue = dispatch_queue_create("com.facebook.corecontrol.wait_for_stop", DISPATCH_QUEUE_SERIAL);
   return [FBFuture
@@ -367,7 +367,7 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
 
 + (FBFuture<NSString *> *)performSampleStackshotForProcessIdentifier:(pid_t)processIdentifier queue:(dispatch_queue_t)queue
 {
-  return [[[[[FBProcessBuilder
+  return [[[[[IDBProcessBuilder
     withLaunchPath:@"/usr/bin/sample" arguments:@[@(processIdentifier).stringValue, @(SampleDuration).stringValue]]
     withStdOutInMemoryAsString]
     runUntilCompletionWithAcceptableExitCodes:nil]
@@ -377,7 +377,7 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
         causedBy:error]
         failFuture];
     }]
-    onQueue:queue map:^(FBProcess<NSNull *, NSData *, NSData *> *task) {
+    onQueue:queue map:^(IDBProcess<NSNull *, NSData *, NSData *> *task) {
       return task.stdOut;
     }];
 }

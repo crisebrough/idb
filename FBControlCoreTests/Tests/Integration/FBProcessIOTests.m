@@ -22,7 +22,7 @@
 {
   id<FBDataConsumer, FBDataConsumerLifecycle> stdInConsumer = FBDataBuffer.consumableBuffer;
   id<FBDataConsumer, FBDataConsumerLifecycle> stdOutConsumer = FBDataBuffer.consumableBuffer;
-  FBProcessIO *io = [[FBProcessIO alloc] initWithStdIn:nil stdOut:[FBProcessOutput outputForDataConsumer:stdInConsumer] stdErr:[FBProcessOutput outputForDataConsumer:stdOutConsumer]];
+  FBProcessIO *io = [[FBProcessIO alloc] initWithStdIn:nil stdOut:[IDBProcessOutput outputForDataConsumer:stdInConsumer] stdErr:[IDBProcessOutput outputForDataConsumer:stdOutConsumer]];
 
   NSError *error = nil;
   FBProcessIOAttachment *attachment = [[io attach] await:&error];
@@ -62,7 +62,7 @@
 {
   id<FBDataConsumer, FBDataConsumerLifecycle> stdInConsumer = FBDataBuffer.consumableBuffer;
   id<FBDataConsumer, FBDataConsumerLifecycle> stdOutConsumer = FBDataBuffer.consumableBuffer;
-  FBProcessIO *io = [[FBProcessIO alloc] initWithStdIn:nil stdOut:[FBProcessOutput outputForDataConsumer:stdInConsumer] stdErr:[FBProcessOutput outputForDataConsumer:stdOutConsumer]];
+  FBProcessIO *io = [[FBProcessIO alloc] initWithStdIn:nil stdOut:[IDBProcessOutput outputForDataConsumer:stdInConsumer] stdErr:[IDBProcessOutput outputForDataConsumer:stdOutConsumer]];
 
   NSError *error = nil;
   FBProcessIOAttachment *attachment = [[io attach] await:&error];

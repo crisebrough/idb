@@ -8,7 +8,7 @@
 #import <Foundation/Foundation.h>
 #import <XCTest/XCTest.h>
 
-@class FBProcessInfo;
+@class IDBProcessInfo;
 
 /**
  Fixtures for Tests.
@@ -62,6 +62,6 @@
 /**
  A Process.
  */
-- (FBProcessInfo *)launchCtlProcess;
+- (IDBProcessInfo *)launchCtlProcess;
 
 @end

@@ -7,7 +7,7 @@
 
 #import "FBProcessInfo.h"
 
-@implementation FBProcessInfo
+@implementation IDBProcessInfo
 
 @synthesize launchPath = _launchPath;
 @synthesize processIdentifier = _processIdentifier;
@@ -40,7 +40,7 @@
   return ((unsigned long) self.processIdentifier) ^ self.launchPath.hash ^ self.arguments.hash;
 }
 
-- (BOOL)isEqual:(FBProcessInfo *)object
+- (BOOL)isEqual:(IDBProcessInfo *)object
 {
   if (![object isKindOfClass:self.class]) {
     return NO;

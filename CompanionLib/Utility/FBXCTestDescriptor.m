@@ -35,8 +35,8 @@ static FBFuture<FBApplicationLaunchConfiguration *> *BuildAppLaunchConfig(NSStri
     onQueue:queue map:^ (NSArray<id<FBDataConsumer, FBDataConsumerLifecycle>> *outputs) {
       FBProcessIO *io = [[FBProcessIO alloc]
         initWithStdIn:nil
-        stdOut:[FBProcessOutput outputForDataConsumer:outputs[0]]
-        stdErr:[FBProcessOutput outputForDataConsumer:outputs[1]]];
+        stdOut:[IDBProcessOutput outputForDataConsumer:outputs[0]]
+        stdErr:[IDBProcessOutput outputForDataConsumer:outputs[1]]];
       return [[FBApplicationLaunchConfiguration alloc]
         initWithBundleID:bundleID
         bundleName:nil
@@ -109,7 +109,7 @@ static FBFuture<FBApplicationLaunchConfiguration *> *BuildAppLaunchConfig(NSStri
   }
   return [[[commands
     runningApplications]
-    onQueue:target.workQueue fmap:^(NSDictionary<NSString *, FBProcessInfo *> *runningApplications) {
+    onQueue:target.workQueue fmap:^(NSDictionary<NSString *, IDBProcessInfo *> *runningApplications) {
       NSMutableArray<FBFuture<NSNull *> *> *futures = [NSMutableArray array];
       for (NSString *bundleID in runningApplications) {
        [futures addObject:[commands killApplicationWithBundleID:bundleID]];

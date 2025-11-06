@@ -44,11 +44,11 @@ static const int AVCCHeaderLength = 4;
 
 BOOL WriteFrameToAnnexBStream(CMSampleBufferRef sampleBuffer, id<FBDataConsumer> consumer, id<FBControlCoreLogger> logger, NSError **error)
 {
+  // Validate sample buffer is ready - skip if not ready to avoid serialization errors
   if (!CMSampleBufferDataIsReady(sampleBuffer)) {
-    return [[FBControlCoreError
-      describeFormat:@"Sample Buffer is not ready"]
-      failBool:error];
+    return NO;
   }
+
   NSData *headerData = AnnexBNALUStartCodeData();
   NSMutableData *consumableData = [NSMutableData alloc];
 

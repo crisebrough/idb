@@ -82,8 +82,8 @@
   NSString *stdOutPath = [path stringByAppendingPathComponent:@"stdout.log"];
   FBProcessIO *io = [[FBProcessIO alloc]
     initWithStdIn:nil
-    stdOut:[FBProcessOutput outputForFilePath:stdOutPath]
-    stdErr:[FBProcessOutput outputForFilePath:stdErrPath]];
+    stdOut:[IDBProcessOutput outputForFilePath:stdOutPath]
+    stdErr:[IDBProcessOutput outputForFilePath:stdErrPath]];
   FBApplicationLaunchConfiguration *applicationLaunchConfiguration = [[FBApplicationLaunchConfiguration alloc]
     initWithBundleID:self.safariAppLaunch.bundleID
     bundleName:self.safariAppLaunch.bundleName

@@ -22,7 +22,7 @@ typedef NS_ENUM(NSUInteger, FBCompressionFormat) {
   FBCompressionFormatZSTD = 2,
 };
 
-@class FBProcessInput;
+@class IDBProcessInput;
 
 /**
  Operations of Zip/Tar Archives
@@ -80,7 +80,7 @@ typedef NS_ENUM(NSUInteger, FBCompressionFormat) {
  @param compression compression format used by client
  @return a Future wrapping the extracted tar destination.
  */
-+ (FBFuture<NSString *> *)extractArchiveFromStream:(FBProcessInput *)stream toPath:(NSString *)extractPath overrideModificationTime:(BOOL)overrideMTime logger:(id<FBControlCoreLogger>)logger compression:(FBCompressionFormat)compression;
++ (FBFuture<NSString *> *)extractArchiveFromStream:(IDBProcessInput *)stream toPath:(NSString *)extractPath overrideModificationTime:(BOOL)overrideMTime logger:(id<FBControlCoreLogger>)logger compression:(FBCompressionFormat)compression;
 
 /**
  Extracts a gzip from a stream to a single file.
@@ -91,7 +91,7 @@ typedef NS_ENUM(NSUInteger, FBCompressionFormat) {
  @param logger the logger to log to
  @return a Future wrapping the extracted tar destination.
  */
-+ (FBFuture<NSString *> *)extractGzipFromStream:(FBProcessInput *)stream toPath:(NSString *)extractPath logger:(id<FBControlCoreLogger>)logger;
++ (FBFuture<NSString *> *)extractGzipFromStream:(IDBProcessInput *)stream toPath:(NSString *)extractPath logger:(id<FBControlCoreLogger>)logger;
 
 /**
  Creates a gzipped archive compressing the data provided.
@@ -100,7 +100,7 @@ typedef NS_ENUM(NSUInteger, FBCompressionFormat) {
  @param logger the logger to log to.
  @return a Future wrapping the archive data.
  */
-+ (FBFuture<FBProcess<id, NSData *, id> *> *)createGzipDataFromProcessInput:(FBProcessInput *)input logger:(id<FBControlCoreLogger>)logger;
++ (FBFuture<IDBProcess<id, NSData *, id> *> *)createGzipDataFromProcessInput:(IDBProcessInput *)input logger:(id<FBControlCoreLogger>)logger;
 
 /**
  Creates a gzips archive, returning an task that has an NSInputStream attached to stdout.
@@ -109,11 +109,10 @@ typedef NS_ENUM(NSUInteger, FBCompressionFormat) {
  To confirm that the stream has been correctly written, the caller should check the exit code of the returned task upon completion.
 
  @param path the path to archive.
- @param queue the queue to do work on
  @param logger the logger to log to.
  @return a Future containing a task with an NSInputStream attached to stdout.
  */
-+ (FBFuture<FBProcess<NSNull *, NSInputStream *, id> *> *)createGzipForPath:(NSString *)path logger:(id<FBControlCoreLogger>)logger;
++ (FBFuture<IDBProcess<NSNull *, NSInputStream *, id> *> *)createGzipForPath:(NSString *)path logger:(id<FBControlCoreLogger>)logger;
 
 /**
  Creates a gzipped tar archive, returning an task that has an NSInputStream attached to stdout.
@@ -124,7 +123,7 @@ typedef NS_ENUM(NSUInteger, FBCompressionFormat) {
  @param logger the logger to log to.
  @return a Future containing a task with an NSInputStream attached to stdout.
  */
-+ (FBFuture<FBProcess<NSNull *, NSInputStream *, id> *> *)createGzippedTarForPath:(NSString *)path logger:(id<FBControlCoreLogger>)logger;
++ (FBFuture<IDBProcess<NSNull *, NSInputStream *, id> *> *)createGzippedTarForPath:(NSString *)path logger:(id<FBControlCoreLogger>)logger;
 
 /**
  Creates a gzipped tar archive, returning an the data of the tar.

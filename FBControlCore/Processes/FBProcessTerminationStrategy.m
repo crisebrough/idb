@@ -13,9 +13,9 @@
 #import "FBControlCoreLogger.h"
 #import "FBControlCoreGlobalConfiguration.h"
 
-@implementation FBControlCoreError (FBProcessTerminationStrategy)
+@implementation FBControlCoreError (IDBProcessTerminationStrategy)
 
-- (instancetype)attachProcessInfoForIdentifier:(pid_t)processIdentifier processFetcher:(FBProcessFetcher *)processFetcher
+- (instancetype)attachProcessInfoForIdentifier:(pid_t)processIdentifier processFetcher:(IDBProcessFetcher *)processFetcher
 {
   return [self
     extraInfo:[NSString stringWithFormat:@"%d_process", processIdentifier]
@@ -26,38 +26,38 @@
 
 static NSTimeInterval ProcessTableRemovalTimeout = 20.0;
 
-static const FBProcessTerminationStrategyConfiguration FBProcessTerminationStrategyConfigurationDefault = {
+static const IDBProcessTerminationStrategyConfiguration IDBProcessTerminationStrategyConfigurationDefault = {
   .signo = SIGKILL,
   .options =
-    FBProcessTerminationStrategyOptionsCheckProcessExistsBeforeSignal |
-    FBProcessTerminationStrategyOptionsCheckDeathAfterSignal |
-    FBProcessTerminationStrategyOptionsBackoffToSIGKILL,
+    IDBProcessTerminationStrategyOptionsCheckProcessExistsBeforeSignal |
+    IDBProcessTerminationStrategyOptionsCheckDeathAfterSignal |
+    IDBProcessTerminationStrategyOptionsBackoffToSIGKILL,
 };
 
-@interface FBProcessTerminationStrategy ()
+@interface IDBProcessTerminationStrategy ()
 
-@property (nonatomic, assign, readonly) FBProcessTerminationStrategyConfiguration configuration;
-@property (nonatomic, strong, readonly) FBProcessFetcher *processFetcher;
+@property (nonatomic, assign, readonly) IDBProcessTerminationStrategyConfiguration configuration;
+@property (nonatomic, strong, readonly) IDBProcessFetcher *processFetcher;
 @property (nonatomic, strong, readonly) dispatch_queue_t workQueue;
 @property (nonatomic, strong, readonly) id<FBControlCoreLogger> logger;
 
 @end
 
-@implementation FBProcessTerminationStrategy
+@implementation IDBProcessTerminationStrategy
 
 #pragma mark Initializers
 
-+ (instancetype)strategyWithConfiguration:(FBProcessTerminationStrategyConfiguration)configuration processFetcher:(FBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger;
++ (instancetype)strategyWithConfiguration:(IDBProcessTerminationStrategyConfiguration)configuration processFetcher:(IDBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger;
 {
-  return [[FBProcessTerminationStrategy alloc] initWithConfiguration:configuration processFetcher:processFetcher workQueue:workQueue logger:logger];
+  return [[IDBProcessTerminationStrategy alloc] initWithConfiguration:configuration processFetcher:processFetcher workQueue:workQueue logger:logger];
 }
 
-+ (instancetype)strategyWithProcessFetcher:(FBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger
++ (instancetype)strategyWithProcessFetcher:(IDBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger
 {
-  return [self strategyWithConfiguration:FBProcessTerminationStrategyConfigurationDefault processFetcher:processFetcher workQueue:workQueue logger:logger];
+  return [self strategyWithConfiguration:IDBProcessTerminationStrategyConfigurationDefault processFetcher:processFetcher workQueue:workQueue logger:logger];
 }
 
-- (instancetype)initWithConfiguration:(FBProcessTerminationStrategyConfiguration)configuration processFetcher:(FBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger
+- (instancetype)initWithConfiguration:(IDBProcessTerminationStrategyConfiguration)configuration processFetcher:(IDBProcessFetcher *)processFetcher workQueue:(dispatch_queue_t)workQueue logger:(id<FBControlCoreLogger>)logger
 {
   NSParameterAssert(processFetcher);
   NSAssert(configuration.signo > 0 && configuration.signo < 32, @"Signal must be greater than 0 (SIGHUP) and less than 32 (SIGUSR2) was %d", configuration.signo);
@@ -79,7 +79,7 @@ static const FBProcessTerminationStrategyConfiguration FBProcessTerminationStrat
 
 - (FBFuture<NSNull *> *)killProcessIdentifier:(pid_t)processIdentifier
 {
-  BOOL checkExists = (self.configuration.options & FBProcessTerminationStrategyOptionsCheckProcessExistsBeforeSignal) == FBProcessTerminationStrategyOptionsCheckProcessExistsBeforeSignal;
+  BOOL checkExists = (self.configuration.options & IDBProcessTerminationStrategyOptionsCheckProcessExistsBeforeSignal) == IDBProcessTerminationStrategyOptionsCheckProcessExistsBeforeSignal;
   if (checkExists && [self.processFetcher processInfoFor:processIdentifier] == nil) {
     return [[FBControlCoreError
       describeFormat:@"Could not find that process %d exists", processIdentifier]
@@ -94,7 +94,7 @@ static const FBProcessTerminationStrategyConfiguration FBProcessTerminationStrat
       failFuture];
   }
 
-  BOOL checkDeath = (self.configuration.options & FBProcessTerminationStrategyOptionsCheckDeathAfterSignal) == FBProcessTerminationStrategyOptionsCheckDeathAfterSignal;
+  BOOL checkDeath = (self.configuration.options & IDBProcessTerminationStrategyOptionsCheckDeathAfterSignal) == IDBProcessTerminationStrategyOptionsCheckDeathAfterSignal;
   if (!checkDeath) {
     [self.logger.debug logFormat:@"Killed %d", processIdentifier];
     return FBFuture.empty;
@@ -113,7 +113,7 @@ static const FBProcessTerminationStrategyConfiguration FBProcessTerminationStrat
         [self.logger.debug logFormat:@"Process %d terminated", processIdentifier];
         return FBFuture.empty;
       }
-      BOOL backoff = (self.configuration.options & FBProcessTerminationStrategyOptionsBackoffToSIGKILL) == FBProcessTerminationStrategyOptionsBackoffToSIGKILL;
+      BOOL backoff = (self.configuration.options & IDBProcessTerminationStrategyOptionsBackoffToSIGKILL) == IDBProcessTerminationStrategyOptionsBackoffToSIGKILL;
       if (self.configuration.signo == SIGKILL || !backoff) {
         return [[[FBControlCoreError
           describeFormat:@"Timed out waiting for %d to dissapear from the process table", processIdentifier]
@@ -122,7 +122,7 @@ static const FBProcessTerminationStrategyConfiguration FBProcessTerminationStrat
       }
 
       // Try with SIGKILL instead.
-      FBProcessTerminationStrategyConfiguration configuration = self.configuration;
+      IDBProcessTerminationStrategyConfiguration configuration = self.configuration;
       configuration.signo = SIGKILL;
       [self.logger.debug logFormat:@"Backing off kill of %d to SIGKILL", processIdentifier];
       return [[[self
@@ -134,15 +134,15 @@ static const FBProcessTerminationStrategyConfiguration FBProcessTerminationStrat
 
 #pragma mark Private
 
-- (FBProcessTerminationStrategy *)strategyWithConfiguration:(FBProcessTerminationStrategyConfiguration)configuration
+- (IDBProcessTerminationStrategy *)strategyWithConfiguration:(IDBProcessTerminationStrategyConfiguration)configuration
 {
-  return [FBProcessTerminationStrategy strategyWithConfiguration:configuration processFetcher:self.processFetcher workQueue:self.workQueue logger:self.logger];
+  return [IDBProcessTerminationStrategy strategyWithConfiguration:configuration processFetcher:self.processFetcher workQueue:self.workQueue logger:self.logger];
 }
 
-- (FBFuture<NSNull *> *)onQueue:(dispatch_queue_t)queue waitForProcessIdentifierToDie:(pid_t)processIdentifier processFetcher:(FBProcessFetcher *)processFetcher
+- (FBFuture<NSNull *> *)onQueue:(dispatch_queue_t)queue waitForProcessIdentifierToDie:(pid_t)processIdentifier processFetcher:(IDBProcessFetcher *)processFetcher
 {
   return [FBFuture onQueue:queue resolveWhen:^ BOOL {
-    FBProcessInfo *polledProcess = [processFetcher processInfoFor:processIdentifier];
+    IDBProcessInfo *polledProcess = [processFetcher processInfoFor:processIdentifier];
     return polledProcess == nil;
   }];
 }

@@ -35,7 +35,7 @@
   _logger = logger;
   NSURLSessionConfiguration *configuration = NSURLSessionConfiguration.defaultSessionConfiguration;
   NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:NSOperationQueue.new];
-  _input = FBProcessInput.inputFromConsumer;
+  _input = IDBProcessInput.inputFromConsumer;
   _task = [session dataTaskWithURL:url];
 
   return self;

@@ -362,20 +362,20 @@ FBFileContainerKind const FBFileContainerKindWallpaper = @"wallpaper";
 {
   return [[[self
     mapToContainedFile:path]
-    onQueue:self.queue fmap:^ FBFuture<FBProcess<NSNull *, id<FBDataConsumer>, NSData *> *> * (id<FBContainedFile> fileToTail) {
+    onQueue:self.queue fmap:^ FBFuture<IDBProcess<NSNull *, id<FBDataConsumer>, NSData *> *> * (id<FBContainedFile> fileToTail) {
       NSString *pathOnHostFileSystem = fileToTail.pathOnHostFileSystem;
       if (!pathOnHostFileSystem) {
         return [[FBControlCoreError
           describeFormat:@"Cannot tail %@, it is not on the local filesystem", fileToTail]
           failFuture];
       }
-      return [[[[FBProcessBuilder
+      return [[[[IDBProcessBuilder
         withLaunchPath:@"/usr/bin/tail"]
         withArguments:@[@"-c+1", @"-f", pathOnHostFileSystem]]
         withStdOutConsumer:consumer]
         start];
     }]
-    onQueue:self.queue map:^(FBProcess *process) {
+    onQueue:self.queue map:^(IDBProcess *process) {
       return [process.statLoc
         onQueue:self.queue respondToCancellation:^{
           return [process sendSignal:SIGTERM backingOffToKillWithTimeout:1 logger:nil];

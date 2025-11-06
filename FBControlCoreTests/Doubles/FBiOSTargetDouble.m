@@ -63,7 +63,7 @@
   return [FBFuture futureWithError:[[FBControlCoreError describe:@"Unimplemented"] build]];
 }
 
-- (FBFuture<FBProcess *> *)launchApplication:(FBApplicationLaunchConfiguration *)configuration
+- (FBFuture<IDBProcess *> *)launchApplication:(FBApplicationLaunchConfiguration *)configuration
 {
   return [FBFuture futureWithError:[[FBControlCoreError describe:@"Unimplemented"] build]];
 }
@@ -98,7 +98,7 @@
   return [FBFuture futureWithError:[[FBControlCoreError describe:@"Unimplemented"] build]];
 }
 
-- (FBFuture<NSDictionary<NSString *, FBProcessInfo *> *> *)runningApplications
+- (FBFuture<NSDictionary<NSString *, IDBProcessInfo *> *> *)runningApplications
 {
   return [FBFuture futureWithError:[[FBControlCoreError describe:@"Unimplemented"] build]];
 }

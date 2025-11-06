@@ -112,7 +112,7 @@ struct InstallMethodHandler {
     skipSigningBundles: Bool
   ) async throws -> FBInstalledArtifact {
 
-    func installSource(dataStream: FBProcessInput<AnyObject>, skipSigningBundles: Bool) async throws -> FBInstalledArtifact {
+    func installSource(dataStream: IDBProcessInput<AnyObject>, skipSigningBundles: Bool) async throws -> FBInstalledArtifact {
       switch destination {
       case .app:
         return try await BridgeFuture.value(
@@ -141,7 +141,7 @@ struct InstallMethodHandler {
 
     switch source {
     case let .data(data):
-      let dataStream = pipeToInputOutput(initial: data, requestStream: requestStream) as! FBProcessInput<AnyObject>
+      let dataStream = pipeToInputOutput(initial: data, requestStream: requestStream) as! IDBProcessInput<AnyObject>
       return try await installSource(dataStream: dataStream, skipSigningBundles: skipSigningBundles)
 
     case let .url(urlString):
@@ -149,7 +149,7 @@ struct InstallMethodHandler {
         throw GRPCStatus(code: .invalidArgument, message: "Invalid url source")
       }
       let download = FBDataDownloadInput.dataDownload(with: url, logger: targetLogger)
-      let input = download.input as! FBProcessInput<AnyObject>
+      let input = download.input as! IDBProcessInput<AnyObject>
 
       return try await installSource(dataStream: input, skipSigningBundles: skipSigningBundles)
 
@@ -184,8 +184,8 @@ struct InstallMethodHandler {
     }
   }
 
-  private func pipeToInputOutput(initial: Data, requestStream: GRPCAsyncRequestStream<Idb_InstallRequest>) -> FBProcessInput<OutputStream> {
-    let input = FBProcessInput<OutputStream>.fromStream()
+  private func pipeToInputOutput(initial: Data, requestStream: GRPCAsyncRequestStream<Idb_InstallRequest>) -> IDBProcessInput<OutputStream> {
+    let input = IDBProcessInput<OutputStream>.fromStream()
     let appStream = input.contents
     Task {
       appStream.open()

@@ -27,7 +27,7 @@
 
 @implementation FBProcessIOAttachment
 
-- (instancetype)initWithIO:(FBProcessIO *)io stdIn:(nullable FBProcessStreamAttachment *)stdIn stdOut:(nullable FBProcessStreamAttachment *)stdOut stdErr:(nullable FBProcessStreamAttachment *)stdErr
+- (instancetype)initWithIO:(FBProcessIO *)io stdIn:(nullable IDBProcessStreamAttachment *)stdIn stdOut:(nullable IDBProcessStreamAttachment *)stdOut stdErr:(nullable IDBProcessStreamAttachment *)stdErr
 {
   self = [super init];
   if (!self) {
@@ -49,15 +49,15 @@
 
 @end
 
-@interface FBProcessFileAttachment ()
+@interface IDBProcessFileAttachment ()
 
 @property (nonatomic, strong, readonly) FBProcessIO *io;
 
 @end
 
-@implementation FBProcessFileAttachment
+@implementation IDBProcessFileAttachment
 
-- (instancetype)initWithIO:(FBProcessIO *)io stdOut:(nullable id<FBProcessFileOutput>)stdOut stdErr:(nullable id<FBProcessFileOutput>)stdErr
+- (instancetype)initWithIO:(FBProcessIO *)io stdOut:(nullable id<IDBProcessFileOutput>)stdOut stdErr:(nullable id<IDBProcessFileOutput>)stdErr
 {
   self = [super init];
   if (!self) {
@@ -80,7 +80,7 @@
 
 @implementation FBProcessIO
 
-- (instancetype)initWithStdIn:(nullable FBProcessInput *)stdIn stdOut:(nullable FBProcessOutput *)stdOut stdErr:(nullable FBProcessOutput *)stdErr
+- (instancetype)initWithStdIn:(nullable IDBProcessInput *)stdIn stdOut:(nullable IDBProcessOutput *)stdOut stdErr:(nullable IDBProcessOutput *)stdErr
 {
   self = [super init];
   if (!self) {
@@ -97,7 +97,7 @@
 
 + (instancetype)outputToDevNull
 {
-  return [[self alloc] initWithStdIn:nil stdOut:FBProcessOutput.outputForNullDevice stdErr:FBProcessOutput.outputForNullDevice];
+  return [[self alloc] initWithStdIn:nil stdOut:IDBProcessOutput.outputForNullDevice stdErr:IDBProcessOutput.outputForNullDevice];
 }
 
 #pragma mark Methods
@@ -141,7 +141,7 @@
     }];
 }
 
-- (FBFuture<FBProcessFileAttachment *> *)attachViaFile
+- (FBFuture<IDBProcessFileAttachment *> *)attachViaFile
 {
   return [[[self
     startExclusiveAttachment]
@@ -167,7 +167,7 @@
         stdErr = nil;
       }
       // Everything is setup, launch the process now.
-      return [FBFuture futureWithResult:[[FBProcessFileAttachment alloc] initWithIO:self stdOut:stdOut stdErr:stdErr]];
+      return [FBFuture futureWithResult:[[IDBProcessFileAttachment alloc] initWithIO:self stdOut:stdOut stdErr:stdErr]];
     }];
 }
 
@@ -238,7 +238,7 @@
     }];
 }
 
-- (FBFuture *)wrapFileAttachment:(id<FBProcessOutput>)output
+- (FBFuture *)wrapFileAttachment:(id<IDBProcessOutput>)output
 {
   if (!output) {
     return [FBFuture futureWithResult:@YES];

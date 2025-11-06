@@ -9,11 +9,11 @@
 
 #import <FBControlCore/FBControlCore.h>
 
-@interface FBProcessFetcherTests : XCTestCase
+@interface IDBProcessFetcherTests : XCTestCase
   @property(nonatomic, retain)NSTask *task;
 @end
 
-@implementation FBProcessFetcherTests
+@implementation IDBProcessFetcherTests
 - (void)setUp {
   NSTask* task = [[NSTask alloc] init];
   task.launchPath = @"/bin/sleep";
@@ -33,7 +33,7 @@
 
 - (void)testIsProcessRunningRunningProcess
 {
-  FBProcessFetcher *fetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *fetcher = [[IDBProcessFetcher alloc] init];
   NSError *error;
 
   BOOL output = [fetcher isProcessRunning:self.task.processIdentifier error:&error];
@@ -44,7 +44,7 @@
 
 - (void)testIsProcessRunningDeadProcess
 {
-  FBProcessFetcher *fetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *fetcher = [[IDBProcessFetcher alloc] init];
   NSError *error;
   
   [self.task terminate];
@@ -57,7 +57,7 @@
 
 - (void)testIsProcessRunningSuspendedProcess
 {
-  FBProcessFetcher *fetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *fetcher = [[IDBProcessFetcher alloc] init];
   NSError *error;
   
   [self.task suspend];
@@ -70,7 +70,7 @@
 
 - (void)testIsProcessStoppedRunningProcess
 {
-  FBProcessFetcher *fetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *fetcher = [[IDBProcessFetcher alloc] init];
   NSError *error;
 
   BOOL output = [fetcher isProcessStopped:self.task.processIdentifier error:&error];
@@ -81,7 +81,7 @@
 
 - (void)testIsProcessStoppedDeadProcess
 {
-  FBProcessFetcher *fetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *fetcher = [[IDBProcessFetcher alloc] init];
   NSError *error;
   
   [self.task terminate];
@@ -94,7 +94,7 @@
 
 - (void)testIsProcessStoppedSuspendedProcess
 {
-  FBProcessFetcher *fetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *fetcher = [[IDBProcessFetcher alloc] init];
   NSError *error;
   
   [self.task suspend];
@@ -106,7 +106,7 @@
 
 - (void)testIsDebuggerAttachedToDeadProcess
 {
-  FBProcessFetcher *fetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *fetcher = [[IDBProcessFetcher alloc] init];
   NSError *error;
   
   [self.task terminate];
@@ -119,7 +119,7 @@
 
 - (void)testIsDebuggerAttachedToProcessNoDebugger
 {
-  FBProcessFetcher *fetcher = [[FBProcessFetcher alloc] init];
+  IDBProcessFetcher *fetcher = [[IDBProcessFetcher alloc] init];
   NSError *error;
   
   BOOL output = [fetcher isDebuggerAttachedTo:self.task.processIdentifier error:&error];

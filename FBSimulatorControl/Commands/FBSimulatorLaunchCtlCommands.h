@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class FBProcessInfo;
+@class IDBProcessInfo;
 @class FBSimulator;
 
 /**
@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param process the process to obtain the name for.
  @return A Future, wrapping the Service Name.
  */
-- (FBFuture<NSString *> *)serviceNameForProcess:(FBProcessInfo *)process;
+- (FBFuture<NSString *> *)serviceNameForProcess:(IDBProcessInfo *)process;
 
 /**
  Finds the Service Name and Process Identifier for all services matching the given search pattern.
@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param process the process to look for.
  @return A Future, YES if the process exists. NO otherwise.
  */
-- (FBFuture<NSNumber *> *)processIsRunningOnSimulator:(FBProcessInfo *)process;
+- (FBFuture<NSNumber *> *)processIsRunningOnSimulator:(IDBProcessInfo *)process;
 
 /**
  Returns the currently running launchctl services.

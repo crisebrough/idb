@@ -29,11 +29,11 @@ struct LaunchMethodHandler {
     if start.waitFor {
       let stdOutConsumer = pipeOutput(interface: .stdout, responseWriter: responseWriter)
       completions.append(stdOutConsumer.finishedConsuming)
-      stdOut = FBProcessOutput<AnyObject>(for: stdOutConsumer)
+      stdOut = IDBProcessOutput<AnyObject>(for: stdOutConsumer)
 
       let stdErrConsumer = pipeOutput(interface: .stderr, responseWriter: responseWriter)
       completions.append(stdErrConsumer.finishedConsuming)
-      stdErr = FBProcessOutput<AnyObject>(for: stdErrConsumer)
+      stdErr = IDBProcessOutput<AnyObject>(for: stdErrConsumer)
     }
     let io = FBProcessIO<AnyObject, AnyObject, AnyObject>(stdIn: nil, stdOut: stdOut, stdErr: stdErr)
     let config = FBApplicationLaunchConfiguration(
@@ -62,8 +62,8 @@ struct LaunchMethodHandler {
     _ = try await BridgeFuture.values(completions)
   }
 
-  private func processOutputForNullDevice() -> FBProcessOutput<AnyObject> {
-    return FBProcessOutput<AnyObject>.forNullDevice() as! FBProcessOutput<AnyObject>
+  private func processOutputForNullDevice() -> IDBProcessOutput<AnyObject> {
+    return IDBProcessOutput<AnyObject>.forNullDevice() as! IDBProcessOutput<AnyObject>
   }
 
   private func pipeOutput(interface: Idb_ProcessOutput.Interface, responseWriter: FIFOStreamWriter<GRPCAsyncResponseStreamWriter<Idb_LaunchResponse>>) -> (FBDataConsumer & FBDataConsumerLifecycle) {

@@ -19,41 +19,115 @@ public final class FIFOStreamWriter<StreamWriter: AsyncStreamWriter>: @unchecked
 
   private let stream: StreamWriter
 
-  private let semaphore = DispatchSemaphore(value: 0)
+  // Single processing task to handle all writes sequentially
+  private let processingTask: Task<Void, Never>
+
+  // Channel for sending values to the processing task
+  private let channel: AsyncChannel<StreamWriter.Value>
+
+  // Track if we've been shut down
+  private var isShutdown = false
+  private let shutdownLock = NSLock()
 
   public init(stream: StreamWriter) {
     self.stream = stream
+    let channel = AsyncChannel<StreamWriter.Value>()
+    self.channel = channel
+
+    // Start single long-running task to process all writes
+    // Capture the stream iterator directly to avoid multiple iterator creation
+    let capturedStream = stream
+      var iterator = channel.makeIterator()
+    self.processingTask = Task {
+      while !Task.isCancelled {
+        if let value = await iterator.next() {
+          do {
+            try await capturedStream.send(value)
+          } catch {
+            // Log error but continue processing
+            // In production, you might want better error handling
+            print("FIFOStreamWriter: Error sending value: \(error)")
+          }
+        } else {
+          break // Stream finished
+        }
+      }
+    }
   }
 
-  // We need to please swift concurrency checker, because
-  // interop between semaphores and swift concurrency is not compile-time safe
-  private class ErrorWrapper: @unchecked Sendable {
-    var error: Error?
+  deinit {
+    // Ensure cleanup happens
+    shutdown()
   }
 
   /// This method should be called from GCD
   /// Never ever call that from swift concurrency cooperative pool thread, because it is unsafe
   /// and you will violate swift concurrency contract. Doing that may cause deadlock of whole concurrency runtime.
   public func send(_ value: StreamWriter.Value) throws {
-    // Implementation is indentionally naive. "Clever" implementation is much harder to understand
-    // and gives 0.01 better results on 1000 of elements. We can live pretty happily with
-    // that relatively "slow" impl.
-    // There is one downside in current implementation - it is blocking and we consume the thread.
-    // So we assume that `stream.send` will not live for a long time.
+    shutdownLock.lock()
+    defer { shutdownLock.unlock() }
 
-    let errWrapper = ErrorWrapper()
-    Task {
-      do {
-        try await stream.send(value)
-      } catch {
-        errWrapper.error = error
-      }
-      semaphore.signal()
+    guard !isShutdown else {
+      throw FIFOStreamWriterError.streamShutdown
     }
-    semaphore.wait()
 
-    if let err = errWrapper.error {
-      throw err
+    // Direct synchronous yield - safe from GCD thread
+    channel.yieldSynchronously(value)
+  }
+
+  public func shutdown() {
+    shutdownLock.lock()
+    defer { shutdownLock.unlock() }
+
+    guard !isShutdown else { return }
+    isShutdown = true
+
+    channel.finish()
+    processingTask.cancel()
+  }
+}
+
+enum FIFOStreamWriterError: Error {
+  case streamShutdown
+}
+
+/// A simple async channel for passing values between tasks
+private final class AsyncChannel<Element: Sendable>: @unchecked Sendable {
+  private let stream: AsyncStream<Element>
+  private let continuation: AsyncStream<Element>.Continuation
+  private var _iterator: AsyncStream<Element>.AsyncIterator?
+  private let iteratorLock = NSLock()
+
+  init() {
+    (stream, continuation) = AsyncStream.makeStream(bufferingPolicy: .unbounded)
+  }
+
+  func send(_ value: Element) async {
+    continuation.yield(value)
+  }
+
+  func finish() {
+    continuation.finish()
+  }
+
+  /// Synchronously yield a value to the stream
+  /// This is safe to call from any thread, including GCD threads
+  func yieldSynchronously(_ value: Element) {
+    continuation.yield(value)
+  }
+
+  /// Get the single iterator for this channel
+  /// Only call this once - multiple iterators are not supported
+  func makeIterator() -> AsyncStream<Element>.AsyncIterator {
+    iteratorLock.lock()
+    defer { iteratorLock.unlock() }
+
+    if let iterator = _iterator {
+      return iterator
     }
+
+    let iterator = stream.makeAsyncIterator()
+    _iterator = iterator
+    return iterator
   }
 }

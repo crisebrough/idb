@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class FBApplicationLaunchConfiguration;
 @class FBInstalledApplication;
-@class FBProcessInfo;
+@class IDBProcessInfo;
 
 @protocol FBLaunchedApplication;
 

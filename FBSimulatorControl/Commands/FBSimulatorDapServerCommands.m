@@ -34,7 +34,7 @@
   return self;
 }
 
-- (FBFuture<FBProcess<id, id<FBDataConsumer>, NSString *> *> *) launchDapServer:dapPath stdIn:(FBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut{
+- (FBFuture<IDBProcess<id, id<FBDataConsumer>, NSString *> *> *) launchDapServer:dapPath stdIn:(IDBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut{
   NSString *dap_log_dir = [self.simulator.coreSimulatorLogsDirectory stringByAppendingPathComponent:@"dap"];
   
   NSError *error = nil;
@@ -64,7 +64,7 @@
     @"LLDBVSCODE_LOG": log_string
   };
   NSString *fullPath = [self.simulator.dataDirectory stringByAppendingPathComponent:dapPath];
-  return [[[[[[FBProcessBuilder
+  return [[[[[[IDBProcessBuilder
               withLaunchPath:fullPath]
               withEnvironment:envs]
               withStdIn:stdIn]

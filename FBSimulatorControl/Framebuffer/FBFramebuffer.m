@@ -176,29 +176,58 @@
 - (void)registerConsumer:(id<FBFramebufferConsumer>)consumer uuid:(NSUUID *)uuid queue:(dispatch_queue_t)queue
 {
   void (^ioSurfaceChanged)(IOSurface *) = ^void(IOSurface *surface) {
+    // Retain the IOSurface to prevent deallocation during async dispatch
+    IOSurfaceRef surfaceRef = NULL;
+    if (surface) {
+      surfaceRef = (__bridge IOSurfaceRef)surface;
+      CFRetain(surfaceRef);
+    }
+
     dispatch_async(queue, ^{
       [consumer didChangeIOSurface:surface];
+
+      // Release after consumption
+      if (surfaceRef) {
+        CFRelease(surfaceRef);
+      }
     });
   };
 
-  [self.surface registerCallbackWithUUID:uuid ioSurfacesChangeCallback:ioSurfaceChanged];
-  [self.surface registerCallbackWithUUID:uuid ioSurfaceChangeCallback:ioSurfaceChanged];
+  // ROCKRemoteProxy lies about selector support - try both methods and ignore failures
+  // Try the plural version first (Xcode 13.2+)
+  @try {
+    [self.surface registerCallbackWithUUID:uuid ioSurfacesChangeCallback:ioSurfaceChanged];
+    [self.logger logFormat:@"Successfully registered ioSurfacesChangeCallback"];
+  } @catch (NSException *e) {
+    // Try the singular version (Xcode 9+)
+    @try {
+      [self.surface registerCallbackWithUUID:uuid ioSurfaceChangeCallback:ioSurfaceChanged];
+      [self.logger logFormat:@"Successfully registered ioSurfaceChangeCallback"];
+    } @catch (NSException *e2) {
+      [self.logger logFormat:@"Failed to register any ioSurface callbacks: %@ / %@", e.reason, e2.reason];
+    }
+  }
 
-  [self.surface registerCallbackWithUUID:uuid damageRectanglesCallback:^(NSArray<NSValue *> *frames) {
-    dispatch_async(queue, ^{
-      for (NSValue *value in frames) {
-        [consumer didReceiveDamageRect:value.rectValue];
-      }
-    });
-  }];
+  // damageRectanglesCallback is not part of the SimDisplayIOSurfaceRenderable protocol
+  // It may exist on some implementations but we should not rely on it
 }
 
 - (void)unregisterConsumer:(id<FBFramebufferConsumer>)consumer uuid:(NSUUID *)uuid
 {
-  [self.surface unregisterIOSurfacesChangeCallbackWithUUID:uuid];
-  [self.surface unregisterIOSurfaceChangeCallbackWithUUID:uuid];
+  // ROCKRemoteProxy lies about selector support - try both methods and ignore failures
+  @try {
+    [self.surface unregisterIOSurfacesChangeCallbackWithUUID:uuid];
+  } @catch (NSException *e) {
+    // Ignore - may not be registered or may not support this version
+  }
 
-  [self.surface unregisterDamageRectanglesCallbackWithUUID:uuid];
+  @try {
+    [self.surface unregisterIOSurfaceChangeCallbackWithUUID:uuid];
+  } @catch (NSException *e) {
+    // Ignore - may not be registered or may not support this version
+  }
+
+  // damageRectanglesCallback is not part of the protocol, removed
 }
 
 @end

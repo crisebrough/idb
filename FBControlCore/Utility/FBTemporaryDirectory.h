@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param name the desitnation name.
  @return a Context Future containing the root of the extraction tar
  */
-- (FBFutureContext<NSURL *> *)withGzipExtractedFromStream:(FBProcessInput *)input name:(NSString *)name;
+- (FBFutureContext<NSURL *> *)withGzipExtractedFromStream:(IDBProcessInput *)input name:(NSString *)name;
 
 /**
  Extracts archive data to a temporary location.
@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param compression archive compression format
  @return a Context Future containing the root of the extraction tar
  */
-- (FBFutureContext<NSURL *> *)withArchiveExtractedFromStream:(FBProcessInput *)input compression:(FBCompressionFormat)compression;
+- (FBFutureContext<NSURL *> *)withArchiveExtractedFromStream:(IDBProcessInput *)input compression:(FBCompressionFormat)compression;
 
 /**
  Extracts a archive stream to a temporary location.
@@ -75,7 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param overrideMTime if YES the archive contests' `mtime` will be ignored. Current timestamp will be used as mtime of extracted files/directories.
  @return a Context Future containing the root of the extraction tar
  */
-- (FBFutureContext<NSURL *> *)withArchiveExtractedFromStream:(FBProcessInput *)input compression:(FBCompressionFormat)compression overrideModificationTime:(BOOL)overrideMTime;
+- (FBFutureContext<NSURL *> *)withArchiveExtractedFromStream:(IDBProcessInput *)input compression:(FBCompressionFormat)compression overrideModificationTime:(BOOL)overrideMTime;
 
 /**
  Extracts an archive file to a temporary location.

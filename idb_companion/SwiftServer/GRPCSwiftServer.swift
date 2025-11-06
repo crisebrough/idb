@@ -16,8 +16,20 @@ import NIOSSL
 
 struct IDBUnixDomainSocketPathWrongType: Error {}
 
+enum GRPCSwiftServerError: Error {
+  case serverAlreadyStarted
+  case serverNotStarted
+}
+
 @objc
 final class GRPCSwiftServer: NSObject {
+
+  private enum ServerState {
+    case notStarted
+    case starting
+    case started
+    case stopped
+  }
 
   private struct TLSCertificates {
     let certificates: [NIOSSLCertificateSource]
@@ -27,6 +39,8 @@ final class GRPCSwiftServer: NSObject {
   private var server: EventLoopFuture<Server>?
   private let provider: CallHandlerProvider
   private let logger: FBIDBLogger
+  private var serverState: ServerState = .notStarted
+  private let stateLock = NSLock()
 
   private let serverConfig: Server.Configuration
   private let ports: IDBPortsConfiguration
@@ -81,11 +95,35 @@ final class GRPCSwiftServer: NSObject {
     // Start the server and print its address once it has started.
     let future = FBMutableFuture<NSDictionary>()
 
+    stateLock.lock()
+    defer { stateLock.unlock() }
+
+    guard serverState == .notStarted else {
+      if serverState == .started, let existingServer = server {
+        logger.info().log("Server already started, returning existing instance")
+        // Return the existing server's address
+        existingServer.map(\.channel.localAddress).whenComplete { [ports] result in
+          do {
+            let address = try result.get()
+            try future.resolve(withResult: ports.swiftServerTarget.outputDescription(for: address) as NSDictionary)
+          } catch {
+            future.resolveWithError(error)
+          }
+        }
+        return future
+      }
+      future.resolveWithError(GRPCSwiftServerError.serverAlreadyStarted)
+      return future
+    }
+
+    serverState = .starting
+
     if case .unixDomainSocket(let path) = ports.swiftServerTarget {
       do {
         try cleanupUnixDomainSocket(path: path)
       } catch {
         self.logger.error().log("\(error)")
+        serverState = .notStarted
         future.resolveWithError(error)
         return future
       }
@@ -102,17 +140,53 @@ final class GRPCSwiftServer: NSObject {
     server.map(\.channel.localAddress).whenComplete { [weak self, ports] result in
       do {
         let address = try result.get()
+        self?.stateLock.lock()
+        self?.serverState = .started
+        self?.stateLock.unlock()
         self?.logServerStartup(address: address)
         try future.resolve(withResult: ports.swiftServerTarget.outputDescription(for: address) as NSDictionary)
       } catch {
+        self?.stateLock.lock()
+        self?.serverState = .notStarted
+        self?.stateLock.unlock()
         self?.logger.error().log("\(error)")
         future.resolveWithError(error)
       }
     }
 
-    server.flatMap(\.onClose).whenCompleteBlocking(onto: .main) { [completed] _ in
-      self.logger.info().log("Server closed")
+    server.flatMap(\.onClose).whenCompleteBlocking(onto: .main) { [completed, weak self] _ in
+      self?.stateLock.lock()
+      self?.serverState = .stopped
+      self?.stateLock.unlock()
+      self?.logger.info().log("Server closed")
       completed.resolve(withResult: NSNull())
+    }
+
+    return future
+  }
+
+  @objc func stop() -> FBMutableFuture<NSNull> {
+    let future = FBMutableFuture<NSNull>()
+
+    stateLock.lock()
+    defer { stateLock.unlock() }
+
+    guard serverState == .started, let serverFuture = server else {
+      future.resolveWithError(GRPCSwiftServerError.serverNotStarted)
+      return future
+    }
+
+    serverState = .stopped
+
+    serverFuture.whenSuccess { server in
+      server.initiateGracefulShutdown().whenComplete { result in
+        switch result {
+        case .success:
+          future.resolve(withResult: NSNull())
+        case .failure(let error):
+          future.resolveWithError(error)
+        }
+      }
     }
 
     return future

@@ -23,12 +23,12 @@ static NSString * const HelpText = @".\n\n============================\n"
 {
   dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
 
-  return [[[[[[FBProcessBuilder
+  return [[[[[[IDBProcessBuilder
     withLaunchPath:@"/usr/bin/xcode-select" arguments:@[@"--print-path"]]
     withStdOutInMemoryAsString]
     withStdErrInMemoryAsString]
     runUntilCompletionWithAcceptableExitCodes:[NSSet setWithObject:@0]]
-    onQueue:queue fmap:^(FBProcess<NSNull *, NSString *, NSString *> *task) {
+    onQueue:queue fmap:^(IDBProcess<NSNull *, NSString *, NSString *> *task) {
       NSString *directory = task.stdOut;
       if ([directory stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet].length == 0) {
         return [[FBControlCoreError

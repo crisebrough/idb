@@ -172,7 +172,7 @@ static NSTimeInterval CrashCheckWaitLimit = 120;  // Time to wait for crash repo
 
     // Application process still running.
     // Try to sample process stack.
-    return [[[FBProcessFetcher
+    return [[[IDBProcessFetcher
       performSampleStackshotForProcessIdentifier:self.testHostApplication.processIdentifier
       queue:self.target.workQueue]
     onQueue:self.requestQueue handleError:^FBFuture<NSNull *> *(NSError *_) {

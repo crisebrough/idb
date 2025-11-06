@@ -10,6 +10,9 @@ import FBSimulatorControl
 import GRPC
 import IDBCompanionUtilities
 import IDBGRPCSwift
+import OSLog
+
+private let logger = Logger(subsystem: "com.facebook.idb", category: "VideoStream")
 
 struct VideoStreamMethodHandler {
 
@@ -18,18 +21,32 @@ struct VideoStreamMethodHandler {
   let commandExecutor: FBIDBCommandExecutor
 
   func handle(requestStream: GRPCAsyncRequestStream<Idb_VideoStreamRequest>, responseStream: GRPCAsyncResponseStreamWriter<Idb_VideoStreamResponse>, context: GRPCAsyncServerCallContext) async throws {
+    logger.info("Video stream request received")
     @Atomic var finished = false
 
-    guard case let .start(start) = try await requestStream.requiredNext.control
-    else { throw GRPCStatus(code: .failedPrecondition, message: "Expected start control") }
+    // Create a single iterator for the entire request stream lifecycle
+    var requestIterator = requestStream.makeAsyncIterator()
+    logger.debug("Request stream iterator created")
+
+    // Read the first message using the iterator
+    guard let firstRequest = try await requestIterator.next(),
+          case let .start(start) = firstRequest.control
+    else {
+      logger.error("Failed to read first request from stream or invalid control")
+      throw GRPCStatus(code: .failedPrecondition, message: "Expected start control as first message")
+    }
+
+    logger.info("Starting video stream with format: \(String(describing: start.format)), fps: \(start.fps)")
 
     let videoStream = try await startVideoStream(
       request: start,
       responseStream: responseStream,
       finished: _finished)
 
+    // Use separate tasks for monitoring, but DON'T create new iterators
     let observeClientCancelStreaming = Task<Void, Error> {
-      for try await request in requestStream {
+      // Continue using the same iterator
+      while let request = try await requestIterator.next() {
         switch request.control {
         case .start:
           throw GRPCStatus(code: .failedPrecondition, message: "Video streaming already started")
@@ -39,6 +56,8 @@ struct VideoStreamMethodHandler {
           throw GRPCStatus(code: .invalidArgument, message: "Client should not close request stream explicitly, send `stop` frame first")
         }
       }
+      // Stream ended normally
+      return
     }
 
     let observeVideoStreamStop = Task<Void, Error> {
@@ -46,6 +65,10 @@ struct VideoStreamMethodHandler {
     }
 
     try await Task.select(observeClientCancelStreaming, observeVideoStreamStop).value
+
+    observeClientCancelStreaming.cancel()
+    observeVideoStreamStop.cancel()
+    _finished.set(true)
 
     try await BridgeFuture.await(videoStream.stopStreaming())
     targetLogger.log("The video stream is terminated")
@@ -55,17 +78,23 @@ struct VideoStreamMethodHandler {
     let consumer: FBDataConsumer
 
     if start.filePath.isEmpty {
-      let responseWriter = FIFOStreamWriter(stream: responseStream)
-
+      // BYPASSING FIFOStreamWriter for video streaming - it has a sequential bottleneck
+      // Using direct async writes instead for parallel processing
       consumer = FBBlockDataConsumer.asynchronousDataConsumer { data in
         guard !finished.wrappedValue else { return }
         let response = Idb_VideoStreamResponse.with {
           $0.payload.data = data
         }
-        do {
-          try responseWriter.send(response)
-        } catch {
-          finished.set(true)
+
+        // Fire and forget - create a new Task for each frame
+        // This allows frames to be sent in parallel without blocking capture
+        Task {
+          do {
+            try await responseStream.send(response)
+          } catch {
+            // Set finished flag to stop further processing
+            finished.set(true)
+          }
         }
       }
     } else {
@@ -105,3 +134,4 @@ struct VideoStreamMethodHandler {
     }
   }
 }
+

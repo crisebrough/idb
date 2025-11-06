@@ -83,7 +83,7 @@ static int processIsTranslated(void)
 
 /// Verifies that we can extract desired architecture from binary
 -(FBFuture<NSNull *> *)verifyArchitectureAvailable:(NSString *)binary architecture:(FBArchitecture)architecture queue:(dispatch_queue_t)queue {
-  return [[[[[[[FBProcessBuilder
+  return [[[[[[[IDBProcessBuilder
     withLaunchPath:@"/usr/bin/lipo" arguments:@[binary, @"-verify_arch", architecture]]
     withStdOutToDevNull]
     withStdErrToDevNull]
@@ -94,7 +94,7 @@ static int processIsTranslated(void)
 }
 
 -(FBFuture<NSString *> *)extractArchitecture:(FBArchitecture)architecture processConfiguration:(FBProcessSpawnConfiguration *)processConfiguration queue:(dispatch_queue_t)queue outputPath:(NSURL *)outputPath {
-  return [[[[[[[FBProcessBuilder
+  return [[[[[[[IDBProcessBuilder
     withLaunchPath:@"/usr/bin/lipo" arguments:@[processConfiguration.launchPath, @"-extract", architecture, @"-output", [outputPath path]]]
     withStdOutToDevNull]
               withStdErrLineReader:^(NSString * _Nonnull line) {
@@ -127,13 +127,13 @@ static int processIsTranslated(void)
 }
 
 -(FBFuture<NSString *> *)getOtoolInfoFromBinary:(NSString *)binary queue:(dispatch_queue_t)queue {
-    return [[[[[[[FBProcessBuilder
+    return [[[[[[[IDBProcessBuilder
       withLaunchPath:@"/usr/bin/otool" arguments:@[@"-l", binary]]
       withStdOutInMemoryAsString]
       withStdErrToDevNull]
       runUntilCompletionWithAcceptableExitCodes:[NSSet setWithObject:@0]]
       rephraseFailure:@"Failed query otool -l from %@", binary]
-      onQueue:queue fmap:^FBFuture<NSString *>*(FBProcess<NSNull *, NSString *, NSString *> *task) {
+      onQueue:queue fmap:^FBFuture<NSString *>*(IDBProcess<NSNull *, NSString *, NSString *> *task) {
         if (task.stdOut) {
             return [FBFuture futureWithResult: task.stdOut];
         }

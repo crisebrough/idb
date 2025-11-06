@@ -9,17 +9,17 @@
 
 #import "FBProcess.h"
 
-@interface FBProcessLogOperation ()
+@interface IDBProcessLogOperation ()
 
 @property (nonatomic, strong, readonly) dispatch_queue_t queue;
 
 @end
 
-@implementation FBProcessLogOperation
+@implementation IDBProcessLogOperation
 
 @synthesize consumer = _consumer;
 
-- (instancetype)initWithProcess:(FBProcess *)process consumer:(id<FBDataConsumer>)consumer queue:(dispatch_queue_t)queue
+- (instancetype)initWithProcess:(IDBProcess *)process consumer:(id<FBDataConsumer>)consumer queue:(dispatch_queue_t)queue
 {
   self = [self init];
   if (!self) {
@@ -35,7 +35,7 @@
 
 - (FBFuture<NSNull *> *)completed
 {
-  FBProcess *process = self.process;
+  IDBProcess *process = self.process;
   return [[[process
     exitedWithCodes:[NSSet setWithObject:@0]]
     mapReplace:NSNull.null]

@@ -89,7 +89,7 @@
     onQueue:simulator.workQueue fmap:^(id _) {
       return [io attachViaFile];
     }]
-    onQueue:simulator.workQueue fmap:^ FBFuture<FBSimulatorLaunchedApplication *> * (FBProcessFileAttachment *attachment) {
+    onQueue:simulator.workQueue fmap:^ FBFuture<FBSimulatorLaunchedApplication *> * (IDBProcessFileAttachment *attachment) {
       FBFuture<NSNumber *> *launch = [self launchApplication:configuration stdOut:attachment.stdOut stdErr:attachment.stdErr];
       return [FBSimulatorLaunchedApplication applicationWithSimulator:simulator configuration:configuration attachment:attachment launchFuture:launch];
     }];
@@ -282,7 +282,7 @@
   }];
 }
 
-- (FBFuture<NSNumber *> *)launchApplication:(FBApplicationLaunchConfiguration *)configuration stdOut:(id<FBProcessFileOutput>)stdOut stdErr:(id<FBProcessFileOutput>)stdErr
+- (FBFuture<NSNumber *> *)launchApplication:(FBApplicationLaunchConfiguration *)configuration stdOut:(id<IDBProcessFileOutput>)stdOut stdErr:(id<IDBProcessFileOutput>)stdErr
 {
   // Start reading now, but don't block on the resolution, we will ensure that the read has started after the app has launched.
   FBFuture *readingFutures = [FBFuture futureWithFutures:@[

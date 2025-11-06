@@ -12,7 +12,7 @@
 
 @interface FBSimulatorLaunchedApplication ()
 
-@property (nonatomic, strong, readonly) FBProcessFileAttachment *attachment;
+@property (nonatomic, strong, readonly) IDBProcessFileAttachment *attachment;
 @property (nonatomic, weak, nullable, readonly) FBSimulator *simulator;
 
 @end
@@ -24,7 +24,7 @@
 
 #pragma mark Initializers
 
-+ (FBFuture<FBSimulatorLaunchedApplication *> *)applicationWithSimulator:(FBSimulator *)simulator configuration:(FBApplicationLaunchConfiguration *)configuration attachment:(FBProcessFileAttachment *)attachment launchFuture:(FBFuture<NSNumber *> *)launchFuture
++ (FBFuture<FBSimulatorLaunchedApplication *> *)applicationWithSimulator:(FBSimulator *)simulator configuration:(FBApplicationLaunchConfiguration *)configuration attachment:(IDBProcessFileAttachment *)attachment launchFuture:(FBFuture<NSNumber *> *)launchFuture
 {
   return [launchFuture
     onQueue:simulator.workQueue map:^(NSNumber *processIdentifierNumber) {
@@ -35,7 +35,7 @@
     }];
 }
 
-- (instancetype)initWithSimulator:(FBSimulator *)simulator configuration:(FBApplicationLaunchConfiguration *)configuration attachment:(FBProcessFileAttachment *)attachment processIdentifier:(pid_t)processIdentifier terminationFuture:(FBFuture<NSNull *> *)terminationFuture
+- (instancetype)initWithSimulator:(FBSimulator *)simulator configuration:(FBApplicationLaunchConfiguration *)configuration attachment:(IDBProcessFileAttachment *)attachment processIdentifier:(pid_t)processIdentifier terminationFuture:(FBFuture<NSNull *> *)terminationFuture
 {
   self = [super init];
   if (!self) {
@@ -60,12 +60,12 @@
   return self.configuration.bundleID;
 }
 
-- (id<FBProcessFileOutput>)stdOut
+- (id<IDBProcessFileOutput>)stdOut
 {
   return self.attachment.stdOut;
 }
 
-- (id<FBProcessFileOutput>)stdErr
+- (id<IDBProcessFileOutput>)stdErr
 {
   return self.attachment.stdErr;
 }
@@ -78,8 +78,8 @@
     processTerminationFutureNotifierForProcessIdentifier:processIdentifier]
     mapReplace:NSNull.null]
     onQueue:simulator.workQueue respondToCancellation:^{
-      return [[FBProcessTerminationStrategy
-        strategyWithProcessFetcher:FBProcessFetcher.new workQueue:simulator.workQueue logger:simulator.logger]
+      return [[IDBProcessTerminationStrategy
+        strategyWithProcessFetcher:IDBProcessFetcher.new workQueue:simulator.workQueue logger:simulator.logger]
         killProcessIdentifier:processIdentifier];
     }];
 }

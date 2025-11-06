@@ -44,7 +44,7 @@
 
 #pragma mark FBSimulatorProcessSpawnCommands Implementation
 
-- (FBFuture<FBProcess *> *)launchProcess:(FBProcessSpawnConfiguration *)configuration
+- (FBFuture<IDBProcess *> *)launchProcess:(FBProcessSpawnConfiguration *)configuration
 {
   FBSimulator *simulator = self.simulator;
 
@@ -73,7 +73,7 @@
 
 #pragma mark Private
 
-+ (FBFuture<FBProcess *> *)launchProcessWithSimulator:(FBSimulator *)simulator configuration:(FBProcessSpawnConfiguration *)configuration attachment:(FBProcessIOAttachment *)attachment
++ (FBFuture<IDBProcess *> *)launchProcessWithSimulator:(FBSimulator *)simulator configuration:(FBProcessSpawnConfiguration *)configuration attachment:(FBProcessIOAttachment *)attachment
 {
   // Prepare captured futures
   id<FBControlCoreLogger> logger = simulator.logger;
@@ -130,16 +130,16 @@
       }
   }];
 
-  // Map to the FBProcess implementation.
+  // Map to the IDBProcess implementation.
   return [launchFuture
     onQueue:simulator.workQueue map:^(NSNumber *processIdentifierNumber) {
       // Wrap in the container object
       pid_t processIdentifier = processIdentifierNumber.intValue;
-      return [[FBProcess alloc] initWithProcessIdentifier:processIdentifier statLoc:statLoc exitCode:exitCode signal:signal configuration:configuration queue:simulator.workQueue];
+      return [[IDBProcess alloc] initWithProcessIdentifier:processIdentifier statLoc:statLoc exitCode:exitCode signal:signal configuration:configuration queue:simulator.workQueue];
     }];
 }
 
-+ (NSDictionary<NSString *, id> *)simDeviceLaunchOptionsWithSimulator:(FBSimulator *)simulator launchPath:(NSString *)launchPath arguments:(NSArray<NSString *> *)arguments environment:(NSDictionary<NSString *, NSString *> *)environment waitForDebugger:(BOOL)waitForDebugger stdOut:(nullable FBProcessStreamAttachment *)stdOut stdErr:(nullable FBProcessStreamAttachment *)stdErr mode:(FBProcessSpawnMode)mode
++ (NSDictionary<NSString *, id> *)simDeviceLaunchOptionsWithSimulator:(FBSimulator *)simulator launchPath:(NSString *)launchPath arguments:(NSArray<NSString *> *)arguments environment:(NSDictionary<NSString *, NSString *> *)environment waitForDebugger:(BOOL)waitForDebugger stdOut:(nullable IDBProcessStreamAttachment *)stdOut stdErr:(nullable IDBProcessStreamAttachment *)stdErr mode:(FBProcessSpawnMode)mode
 {
   // argv[0] should be launch path of the process. SimDevice does not do this automatically, so we need to add it.
   arguments = [@[launchPath] arrayByAddingObjectsFromArray:arguments];

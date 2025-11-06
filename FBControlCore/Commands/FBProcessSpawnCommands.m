@@ -25,7 +25,7 @@
 {
   return [[commands
     launchProcess:configuration]
-    onQueue:self.queue fmap:^(FBProcess *process) {
+    onQueue:self.queue fmap:^(IDBProcess *process) {
       return [process exitCode];
     }];
 }
@@ -35,7 +35,7 @@
   id<FBAccumulatingBuffer> consumer = FBDataBuffer.accumulatingBuffer;
   FBProcessIO *io = [[FBProcessIO alloc]
     initWithStdIn:configuration.io.stdIn
-    stdOut:[FBProcessOutput outputForDataConsumer:consumer]
+    stdOut:[IDBProcessOutput outputForDataConsumer:consumer]
     stdErr:configuration.io.stdOut];
   FBProcessSpawnConfiguration *derived = [[FBProcessSpawnConfiguration alloc]
     initWithLaunchPath:configuration.launchPath

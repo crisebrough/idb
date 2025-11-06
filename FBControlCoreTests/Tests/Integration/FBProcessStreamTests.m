@@ -9,22 +9,22 @@
 
 #import <FBControlCore/FBControlCore.h>
 
-@interface FBProcessStreamTests : XCTestCase
+@interface IDBProcessStreamTests : XCTestCase
 
 @end
 
-@implementation FBProcessStreamTests
+@implementation IDBProcessStreamTests
 
 - (void)testClosingActiveStreamStopsWriting
 {
   id<FBConsumableBuffer> consumer = [FBDataBuffer consumableBuffer];
 
-  FBProcessOutput *output = [FBProcessOutput outputForDataConsumer:consumer];
+  IDBProcessOutput *output = [IDBProcessOutput outputForDataConsumer:consumer];
   NSError *error = nil;
-  FBProcessStreamAttachment *attachment = [[output attach] await:&error];
+  IDBProcessStreamAttachment *attachment = [[output attach] await:&error];
   XCTAssertNil(error);
   XCTAssertTrue(attachment.fileDescriptor);
-  XCTAssertEqual(attachment.mode, FBProcessStreamAttachmentModeOutput);
+  XCTAssertEqual(attachment.mode, IDBProcessStreamAttachmentModeOutput);
 
   NSData *data = [@"HELLO WORLD\n" dataUsingEncoding:NSUTF8StringEncoding];
   write(attachment.fileDescriptor, data.bytes, data.length);
@@ -41,7 +41,7 @@
 {
   id<FBAccumulatingBuffer> buffer = [FBDataBuffer accumulatingBuffer];
   NSError *error = nil;
-  id<FBProcessFileOutput> output = [[[FBProcessOutput outputForDataConsumer:buffer] providedThroughFile] await:&error];
+  id<IDBProcessFileOutput> output = [[[IDBProcessOutput outputForDataConsumer:buffer] providedThroughFile] await:&error];
   XCTAssertNil(error);
   XCTAssertNotNil(output);
 
@@ -68,7 +68,7 @@
 {
   NSString *filePath = @"/tmp/hello_world.txt";
   NSError *error = nil;
-  id<FBProcessFileOutput> output = [[[FBProcessOutput outputForFilePath:filePath] providedThroughFile] await:&error];
+  id<IDBProcessFileOutput> output = [[[IDBProcessOutput outputForFilePath:filePath] providedThroughFile] await:&error];
   XCTAssertNil(error);
   XCTAssertNotNil(output);
 
@@ -78,13 +78,13 @@
 - (void)testConcurrentAttachmentIsProhibited
 {
   id<FBConsumableBuffer> consumer = [FBDataBuffer consumableBuffer];
-  FBProcessOutput *output = [FBProcessOutput outputForDataConsumer:consumer];
+  IDBProcessOutput *output = [IDBProcessOutput outputForDataConsumer:consumer];
 
   dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
   dispatch_group_t group = dispatch_group_create();
-  __block FBFuture<FBProcessStreamAttachment *> *firstAttempt = nil;
-  __block FBFuture<FBProcessStreamAttachment *> *secondAttempt = nil;
-  __block FBFuture<FBProcessStreamAttachment *> *thirdAttempt = nil;
+  __block FBFuture<IDBProcessStreamAttachment *> *firstAttempt = nil;
+  __block FBFuture<IDBProcessStreamAttachment *> *secondAttempt = nil;
+  __block FBFuture<IDBProcessStreamAttachment *> *thirdAttempt = nil;
 
   dispatch_group_async(group, concurrentQueue, ^{
     firstAttempt = [output attach];

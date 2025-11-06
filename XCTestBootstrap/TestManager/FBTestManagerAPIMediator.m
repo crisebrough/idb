@@ -126,7 +126,7 @@ static const NSTimeInterval DefaultTestTimeout = (60 * 60);  // 1 hour.
       FBFuture *future = FBFuture.empty;
       if (waitForDebugger) {
         [reporter processWaitingForDebuggerWithProcessIdentifier:launchedApplication.processIdentifier];
-        future = [FBProcessFetcher waitForDebuggerToAttachAndContinueFor:launchedApplication.processIdentifier];
+        future = [IDBProcessFetcher waitForDebuggerToAttachAndContinueFor:launchedApplication.processIdentifier];
       }
 
       return [future onQueue:queue fmap:^(id _) {
@@ -162,7 +162,7 @@ static const NSTimeInterval DefaultTestTimeout = (60 * 60);  // 1 hour.
     onQueue:queue timeout:timeout handler:^{
       // The timeout is applied to the lifecycle of the entire application.
       [logger logFormat:@"Timed out after %f, attempting stack sample", timeout];
-      return [[[FBProcessFetcher
+      return [[[IDBProcessFetcher
         performSampleStackshotForProcessIdentifier:launchedApplication.processIdentifier
         queue:queue]
       onQueue:queue fmap:^FBFuture<id> *(NSString *stackshot) {
@@ -247,8 +247,8 @@ static const NSTimeInterval DefaultTestTimeout = (60 * 60);  // 1 hour.
 
   FBProcessIO *processIO = [[FBProcessIO alloc]
     initWithStdIn:nil
-    stdOut:[FBProcessOutput outputForLogger:self.logger]
-    stdErr:[FBProcessOutput outputForLogger:self.logger]];
+    stdOut:[IDBProcessOutput outputForLogger:self.logger]
+    stdErr:[IDBProcessOutput outputForLogger:self.logger]];
 
   DTXRemoteInvocationReceipt *receipt = [objc_lookUpClass("DTXRemoteInvocationReceipt") new];
   FBApplicationLaunchConfiguration *launch = [[FBApplicationLaunchConfiguration alloc]

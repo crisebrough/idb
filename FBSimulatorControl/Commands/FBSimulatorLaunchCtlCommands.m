@@ -81,7 +81,7 @@
 }
 
 
-- (FBFuture<NSString *> *)serviceNameForProcess:(FBProcessInfo *)process
+- (FBFuture<NSString *> *)serviceNameForProcess:(IDBProcessInfo *)process
 {
   return [self serviceNameForProcessIdentifier:process.processIdentifier];
 }
@@ -130,7 +130,7 @@
     }];
 }
 
-- (FBFuture<NSNumber *> *)processIsRunningOnSimulator:(FBProcessInfo *)process
+- (FBFuture<NSNumber *> *)processIsRunningOnSimulator:(IDBProcessInfo *)process
 {
   return [[self
     serviceNameForProcess:process]

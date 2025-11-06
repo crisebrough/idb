@@ -359,7 +359,7 @@ static void MinicapCompressorCallback(void *outputCallbackRefCon, void *sourceFr
       describeFormat:@"No compression session"]
       failBool:error];
   }
-  
+
   CVPixelBufferRef bufferToWrite = pixelBuffer;
   FBVideoCompressorCallbackSourceFrame *sourceFrameRef = [[FBVideoCompressorCallbackSourceFrame alloc] initWithPixelBuffer:nil frameNumber:frameNumber];
   CVPixelBufferPoolRef bufferPool = self.scaledPixelBufferPoolRef;
@@ -374,15 +374,17 @@ static void MinicapCompressorCallback(void *outputCallbackRefCon, void *sourceFr
       [self.logger logFormat:@"Failed to get a pixel buffer from the pool: %d", returnStatus];
     }
   }
-  
+
+  // Use wall-clock time for presentation timestamp
+  CMTime pts = CMTimeMakeWithSeconds(CFAbsoluteTimeGetCurrent() - timeAtFirstFrame, NSEC_PER_SEC);
+
   VTEncodeInfoFlags flags;
-  CMTime time = CMTimeMakeWithSeconds(CFAbsoluteTimeGetCurrent() - timeAtFirstFrame, NSEC_PER_SEC);
   OSStatus status = VTCompressionSessionEncodeFrame(
     compressionSession,
     bufferToWrite,
-    time,
-    kCMTimeInvalid,  // Frame duration
-    NULL,  // Frame properties
+    pts,
+    kCMTimeInvalid,  // Let VideoToolbox determine duration from framerate property
+    NULL,            // Frame properties
     (__bridge_retained void * _Nullable)(sourceFrameRef),
     &flags
   );
@@ -555,23 +557,50 @@ static void MinicapCompressorCallback(void *outputCallbackRefCon, void *sourceFr
 
 - (BOOL)mountSurface:(IOSurface *)surface error:(NSError **)error
 {
+  // Validate IOSurface
+  if (surface == NULL) {
+    return YES; // Skip frame, continue stream
+  }
+
+  IOSurfaceRef ioSurface = (__bridge IOSurfaceRef _Nonnull)(surface);
+
+  if (!IOSurfaceGetAllocSize(ioSurface)) {
+    return YES; // Skip invalid surface
+  }
+
+  uint32_t seed = IOSurfaceGetSeed(ioSurface);
+  if (seed == 0) {
+    return YES; // Skip invalid surface
+  }
+
   // Remove the old pixel buffer.
   CVPixelBufferRef oldBuffer = self.pixelBuffer;
   if (oldBuffer) {
     CVPixelBufferRelease(oldBuffer);
   }
+
   // Make a Buffer from the Surface
+  // NOTE: This creates a reference to the IOSurface, not a copy
+  // The IOSurface can become invalid during encoding, causing errors
+  // But we need the live reference for Eager mode to get updated frames
   CVPixelBufferRef buffer = NULL;
   CVReturn status = CVPixelBufferCreateWithIOSurface(
     NULL,
-    (__bridge IOSurfaceRef _Nonnull)(surface),
+    ioSurface,
     NULL,
     &buffer
   );
+
+  // Handle IOSurface errors gracefully - don't fail the entire stream
+  if (status == -536870206) {
+    // IOSurface temporarily unavailable - skip this frame
+    [self.logger logFormat:@"IOSurface temporarily unavailable (error %d), skipping frame", status];
+    return YES;
+  }
   if (status != kCVReturnSuccess) {
-    return [[FBSimulatorError
-      describeFormat:@"Failed to create Pixel Buffer from Surface with errorCode %d", status]
-      failBool:error];
+    // Log error but continue stream - don't fail entirely
+    [self.logger logFormat:@"Failed to create Pixel Buffer from Surface with errorCode %d, skipping frame", status];
+    return YES;
   }
 
   id<FBDataConsumer> consumer = self.consumer;
@@ -607,24 +636,24 @@ static void MinicapCompressorCallback(void *outputCallbackRefCon, void *sourceFr
 - (void)pushFrame
 {
   // Ensure that we have all preconditions in place before pushing.
-  CVPixelBufferRef pixelBufer = self.pixelBuffer;
+  CVPixelBufferRef pixelBuffer = self.pixelBuffer;
   id<FBDataConsumer> consumer = self.consumer;
   id<FBSimulatorVideoStreamFramePusher> framePusher = self.framePusher;
-  if (!pixelBufer || !consumer || !framePusher) {
+  if (!pixelBuffer || !consumer || !framePusher) {
     return;
   }
   if (!checkConsumerBufferLimit(consumer, self.logger)) {
     return;
   }
-  
+
   NSUInteger frameNumber = self.frameNumber;
   if (frameNumber == 0) {
     self.timeAtFirstFrame = CFAbsoluteTimeGetCurrent();
   }
   CFTimeInterval timeAtFirstFrame = self.timeAtFirstFrame;
-  
+
   // Push the Frame
-  [framePusher writeEncodedFrame:pixelBufer frameNumber:frameNumber timeAtFirstFrame:timeAtFirstFrame error:nil];
+  [framePusher writeEncodedFrame:pixelBuffer frameNumber:frameNumber timeAtFirstFrame:timeAtFirstFrame error:nil];
 
   // Increment frame counter
   self.frameNumber = frameNumber + 1;
@@ -754,8 +783,8 @@ static void MinicapCompressorCallback(void *outputCallbackRefCon, void *sourceFr
 {
   return @{
     (NSString *) kVTCompressionPropertyKey_ExpectedFrameRate: @(2 * self.framesPerSecond),
-    (NSString *) kVTCompressionPropertyKey_MaxKeyFrameInterval: @360,
-    (NSString *) kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration: @10, // key frame at least every 10 seconds
+    (NSString *) kVTCompressionPropertyKey_MaxKeyFrameInterval: @30, // FIXED: 1 second at 30fps (was @360 - 12 seconds!)
+    (NSString *) kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration: @1, // FIXED: key frame at least every 1 second (was @10)
     (NSString *) kVTCompressionPropertyKey_MaxFrameDelayCount: @0,
   };
 }
@@ -781,16 +810,55 @@ static void MinicapCompressorCallback(void *outputCallbackRefCon, void *sourceFr
 {
   const uint64_t frameInterval = NSEC_PER_SEC / self.framesPerSecond;
   uint64_t lastPushedTime = 0;
+  uint64_t nextFrameTime = 0;
+  int skippedFrames = 0;
+
   while (self.stoppedFuture.state == FBFutureStateRunning) {
-    const uint64_t loopDuration = clock_gettime_nsec_np(CLOCK_UPTIME_RAW) - lastPushedTime;
-    if (lastPushedTime > 0 && loopDuration <= frameInterval) {
-      const uint64_t sleepInterval = frameInterval - loopDuration;
-      [self sleep:sleepInterval];
-    } else if (lastPushedTime > 0) {
-      [self.logger logFormat:@"Push duration exceeded budget"];
+    const uint64_t currentTime = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+
+    // Initialize timing on first iteration
+    if (lastPushedTime == 0) {
+      lastPushedTime = currentTime;
+      nextFrameTime = currentTime + frameInterval;
+      [self pushFrame];
+      continue;
     }
+
+    // Check if we're behind schedule
+    if (currentTime > nextFrameTime + frameInterval) {
+      // We're more than one frame behind - skip frames to catch up
+      skippedFrames++;
+
+      // Reset timing if we're too far behind (more than 5 frames)
+      if (currentTime > nextFrameTime + (frameInterval * 5)) {
+        [self.logger logFormat:@"Frame pusher fell too far behind (%d frames), resetting timing", skippedFrames];
+        skippedFrames = 0;
+        nextFrameTime = currentTime + frameInterval;
+      } else {
+        // Skip to next frame time
+        nextFrameTime += frameInterval;
+        continue;
+      }
+    }
+
+    // Log if we skipped frames
+    if (skippedFrames > 0) {
+      [self.logger logFormat:@"Skipped %d frames to maintain target framerate", skippedFrames];
+      skippedFrames = 0;
+    }
+
+    // Wait until next frame time if ahead of schedule
+    if (currentTime < nextFrameTime) {
+      const uint64_t sleepInterval = nextFrameTime - currentTime;
+      [self sleep:sleepInterval];
+    }
+
+    // Push the frame
     lastPushedTime = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
     [self pushFrame];
+
+    // Schedule next frame
+    nextFrameTime += frameInterval;
   }
 }
 

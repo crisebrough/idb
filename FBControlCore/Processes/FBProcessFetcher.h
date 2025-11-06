@@ -9,7 +9,7 @@
 #import <sys/sysctl.h>
 
 NS_ASSUME_NONNULL_BEGIN
-@class FBProcessInfo;
+@class IDBProcessInfo;
 
 @class FBFuture<T>;
 
@@ -20,31 +20,31 @@ NS_ASSUME_NONNULL_BEGIN
  Sharing a Query object and guaranteeing serialization of method calls
  can be an effective way to reduce the number of allocations that are required.
  */
-@interface FBProcessFetcher : NSObject
+@interface IDBProcessFetcher : NSObject
 
 /**
  A Query for obtaining all of the process information for a given processIdentifier.
 
  @param processIdentifier the Process Identifier to obtain process info for.
- @return an FBProcessInfo object if a process with the given identifier could be found, nil otherwise.
+ @return an IDBProcessInfo object if a process with the given identifier could be found, nil otherwise.
  */
-- (nullable FBProcessInfo *)processInfoFor:(pid_t)processIdentifier;
+- (nullable IDBProcessInfo *)processInfoFor:(pid_t)processIdentifier;
 
 /**
  Obtain process info for child processes.
 
  @param parent the Process Identifier to obtain the subprocesses of
- @return an NSArray<FBProcessInfo> of the parent's child processes.
+ @return an NSArray<IDBProcessInfo> of the parent's child processes.
  */
-- (NSArray<FBProcessInfo *> *)subprocessesOf:(pid_t)parent;
+- (NSArray<IDBProcessInfo *> *)subprocessesOf:(pid_t)parent;
 
 /**
  A Query for returning the processes with a given name.
 
  @param processName the name of the processes to fetch.
- @return an NSArray<FBProcessInfo> of the found processes.
+ @return an NSArray<IDBProcessInfo> of the found processes.
  */
-- (NSArray<FBProcessInfo *> *)processesWithProcessName:(NSString *)processName;
+- (NSArray<IDBProcessInfo *> *)processesWithProcessName:(NSString *)processName;
 
 /**
  A Query for returning the first named child process of the provided parent.

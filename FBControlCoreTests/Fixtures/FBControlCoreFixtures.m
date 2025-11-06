@@ -55,9 +55,9 @@
 
 @implementation XCTestCase (FBControlCoreFixtures)
 
-- (FBProcessInfo *)launchCtlProcess
+- (IDBProcessInfo *)launchCtlProcess
 {
-  return [[FBProcessFetcher new] processInfoFor:NSProcessInfo.processInfo.processIdentifier];
+  return [[IDBProcessFetcher new] processInfoFor:NSProcessInfo.processInfo.processIdentifier];
 }
 
 @end

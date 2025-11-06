@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Concrete Value of Process Information.
  */
-@interface FBProcessInfo : NSObject <NSCopying>
+@interface IDBProcessInfo : NSObject <NSCopying>
 
 /**
  The Designated Initializer.

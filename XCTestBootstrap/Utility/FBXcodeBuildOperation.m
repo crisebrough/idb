@@ -20,7 +20,7 @@ static NSString *const XcodebuildDestinationTimeoutSecs = @"180"; // How long xc
 
 @implementation FBXcodeBuildOperation
 
-+ (FBFuture<IDBProcess *> *)operationWithUDID:(NSString *)udid configuration:(FBTestLaunchConfiguration *)configuration xcodeBuildPath:(NSString *)xcodeBuildPath testRunFilePath:(NSString *)testRunFilePath simDeviceSet:(NSString *)simDeviceSetPath macOSTestShimPath:(NSString *)macOSTestShimPath queue:(dispatch_queue_t)queue logger:(nullable id<FBControlCoreLogger>)logger
++ (FBFuture<FBSubprocess *> *)operationWithUDID:(NSString *)udid configuration:(FBTestLaunchConfiguration *)configuration xcodeBuildPath:(NSString *)xcodeBuildPath testRunFilePath:(NSString *)testRunFilePath simDeviceSet:(NSString *)simDeviceSetPath macOSTestShimPath:(NSString *)macOSTestShimPath queue:(dispatch_queue_t)queue logger:(nullable id<FBControlCoreLogger>)logger
 {
   NSMutableArray<NSString *> *arguments = [[NSMutableArray alloc] init];
   [arguments addObjectsFromArray:@[
@@ -63,7 +63,7 @@ static NSString *const XcodebuildDestinationTimeoutSecs = @"180"; // How long xc
   }
 
   [logger logFormat:@"Starting test with xcodebuild | Arguments: %@ | Environments: %@", [arguments componentsJoinedByString:@" "], [environment description]];
-  IDBProcessBuilder *builder = [[[IDBProcessBuilder
+  FBProcessBuilder *builder = [[[FBProcessBuilder
     withLaunchPath:xcodeBuildPath arguments:arguments]
     withEnvironment:environment]
     withTaskLifecycleLoggingTo:logger];
@@ -73,7 +73,7 @@ static NSString *const XcodebuildDestinationTimeoutSecs = @"180"; // How long xc
   }
   return [[builder
     start]
-    onQueue:queue map:^(IDBProcess *task) {
+    onQueue:queue map:^(FBSubprocess *task) {
       [logger logFormat:@"Task started %@ for xcodebuild %@", task, [arguments componentsJoinedByString:@" "]];
       return task;
     }];
@@ -118,18 +118,18 @@ static NSString *const XcodebuildDestinationTimeoutSecs = @"180"; // How long xc
   return path;
 }
 
-+ (FBFuture<NSArray<IDBProcessInfo *> *> *)terminateAbandonedXcodebuildProcessesForUDID:(NSString *)udid processFetcher:(IDBProcessFetcher *)processFetcher queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
++ (FBFuture<NSArray<FBProcessInfo *> *> *)terminateAbandonedXcodebuildProcessesForUDID:(NSString *)udid processFetcher:(FBProcessFetcher *)processFetcher queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
 {
-  NSArray<IDBProcessInfo *> *processes = [self activeXcodebuildProcessesForUDID:udid processFetcher:processFetcher];
+  NSArray<FBProcessInfo *> *processes = [self activeXcodebuildProcessesForUDID:udid processFetcher:processFetcher];
   if (processes.count == 0) {
     [logger logFormat:@"No processes for %@ to terminate", udid];
     return [FBFuture futureWithResult:@[]];
   }
   [logger logFormat:@"Terminating abandoned xcodebuild processes %@", [FBCollectionInformation oneLineDescriptionFromArray:processes]];
-  IDBProcessTerminationStrategy *strategy = [IDBProcessTerminationStrategy strategyWithProcessFetcher:processFetcher workQueue:queue logger:logger];
-  NSMutableArray<FBFuture<IDBProcessInfo *> *> *futures = [NSMutableArray array];
-  for (IDBProcessInfo *process in processes) {
-    FBFuture<IDBProcessInfo *> *termination = [[strategy killProcessIdentifier:process.processIdentifier] mapReplace:process];
+  FBProcessTerminationStrategy *strategy = [FBProcessTerminationStrategy strategyWithProcessFetcher:processFetcher workQueue:queue logger:logger];
+  NSMutableArray<FBFuture<FBProcessInfo *> *> *futures = [NSMutableArray array];
+  for (FBProcessInfo *process in processes) {
+    FBFuture<FBProcessInfo *> *termination = [[strategy killProcessIdentifier:process.processIdentifier] mapReplace:process];
     [futures addObject:termination];
   }
   return [FBFuture futureWithFutures:futures];
@@ -162,7 +162,7 @@ static NSString *const XcodebuildDestinationTimeoutSecs = @"180"; // How long xc
   return [mutableTestRunProperties copy];
 }
 
-+ (FBFuture<NSNull *> *)confirmExitOfXcodebuildOperation:(IDBProcess *)task configuration:(FBTestLaunchConfiguration *)configuration reporter:(id<FBXCTestReporter>)reporter target:(id<FBiOSTarget>)target logger:(id<FBControlCoreLogger>)logger
++ (FBFuture<NSNull *> *)confirmExitOfXcodebuildOperation:(FBSubprocess *)task configuration:(FBTestLaunchConfiguration *)configuration reporter:(id<FBXCTestReporter>)reporter target:(id<FBiOSTarget>)target logger:(id<FBControlCoreLogger>)logger
 {
   return [[[[task
     exitedWithCodes:[NSSet setWithObjects:@0, @65, nil]]
@@ -188,11 +188,11 @@ static NSString *const XcodebuildDestinationTimeoutSecs = @"180"; // How long xc
 
 #pragma mark Private
 
-+ (NSArray<IDBProcessInfo *> *)activeXcodebuildProcessesForUDID:(NSString *)udid processFetcher:(IDBProcessFetcher *)processFetcher
++ (NSArray<FBProcessInfo *> *)activeXcodebuildProcessesForUDID:(NSString *)udid processFetcher:(FBProcessFetcher *)processFetcher
 {
-  NSArray<IDBProcessInfo *> *xcodebuildProcesses = [processFetcher processesWithProcessName:@"xcodebuild"];
-  NSMutableArray<IDBProcessInfo *> *relevantProcesses = [NSMutableArray array];
-  for (IDBProcessInfo *process in xcodebuildProcesses) {
+  NSArray<FBProcessInfo *> *xcodebuildProcesses = [processFetcher processesWithProcessName:@"xcodebuild"];
+  NSMutableArray<FBProcessInfo *> *relevantProcesses = [NSMutableArray array];
+  for (FBProcessInfo *process in xcodebuildProcesses) {
     if (![process.environment[XcodebuildEnvironmentTargetUDID] isEqualToString:udid]) {
       continue;
     }

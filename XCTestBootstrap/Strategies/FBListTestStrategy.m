@@ -90,7 +90,7 @@
   return [[FBFuture
     futureWithFutures:@[
       [self.target extendedTestShim],
-      [[IDBProcessOutput outputForDataConsumer:shimBuffer] providedThroughFile],
+      [[FBProcessOutput outputForDataConsumer:shimBuffer] providedThroughFile],
     ]]
     onQueue:self.target.workQueue fmap:^(NSArray<id> *tuple) {
       return [self listTestsWithShimPath:tuple[0] shimOutput:tuple[1] shimBuffer:shimBuffer];
@@ -99,7 +99,7 @@
 
 #pragma mark Private
 
-- (FBFuture<NSArray<NSString *> *> *)listTestsWithShimPath:(NSString *)shimPath shimOutput:(id<IDBProcessFileOutput>)shimOutput shimBuffer:(id<FBConsumableBuffer>)shimBuffer
+- (FBFuture<NSArray<NSString *> *> *)listTestsWithShimPath:(NSString *)shimPath shimOutput:(id<FBProcessFileOutput>)shimOutput shimBuffer:(id<FBConsumableBuffer>)shimBuffer
 {
   id<FBConsumableBuffer> stdOutBuffer = FBDataBuffer.consumableBuffer;
   id<FBDataConsumer> stdOutConsumer = [FBCompositeDataConsumer consumerWithConsumers:@[
@@ -157,7 +157,7 @@
   return [environment copy];
 }
 
-+ (FBFuture<NSArray<NSString *> *> *)launchedProcessWithExitCode:(FBFuture<NSNumber *> *)exitCode shimOutput:(id<IDBProcessFileOutput>)shimOutput shimBuffer:(id<FBConsumableBuffer>)shimBuffer stdOutBuffer:(id<FBConsumableBuffer>)stdOutBuffer stdErrBuffer:(id<FBConsumableBuffer>)stdErrBuffer queue:(dispatch_queue_t)queue
++ (FBFuture<NSArray<NSString *> *> *)launchedProcessWithExitCode:(FBFuture<NSNumber *> *)exitCode shimOutput:(id<FBProcessFileOutput>)shimOutput shimBuffer:(id<FBConsumableBuffer>)shimBuffer stdOutBuffer:(id<FBConsumableBuffer>)stdOutBuffer stdErrBuffer:(id<FBConsumableBuffer>)stdErrBuffer queue:(dispatch_queue_t)queue
 {
   return [[[shimOutput
     startReading]
@@ -191,7 +191,7 @@
     }];
 }
 
-+ (FBFuture<NSNull *> *)onQueue:(dispatch_queue_t)queue confirmExit:(FBFuture<NSNumber *> *)exitCode closingOutput:(id<IDBProcessFileOutput>)output shimBuffer:(id<FBConsumableBuffer>)shimBuffer stdOutBuffer:(id<FBConsumableBuffer>)stdOutBuffer stdErrBuffer:(id<FBConsumableBuffer>)stdErrBuffer
++ (FBFuture<NSNull *> *)onQueue:(dispatch_queue_t)queue confirmExit:(FBFuture<NSNumber *> *)exitCode closingOutput:(id<FBProcessFileOutput>)output shimBuffer:(id<FBConsumableBuffer>)shimBuffer stdOutBuffer:(id<FBConsumableBuffer>)stdOutBuffer stdErrBuffer:(id<FBConsumableBuffer>)stdErrBuffer
 {
   return [exitCode
     onQueue:queue fmap:^(NSNumber *exitCodeNumber) {
@@ -216,7 +216,7 @@
   NSTimeInterval timeout = configuration.testTimeout;
 
 
-  FBProcessIO *io = [[FBProcessIO alloc] initWithStdIn:nil stdOut:[IDBProcessOutput outputForDataConsumer:stdOutConsumer] stdErr:[IDBProcessOutput outputForDataConsumer:stdErrConsumer]];
+  FBProcessIO *io = [[FBProcessIO alloc] initWithStdIn:nil stdOut:[FBProcessOutput outputForDataConsumer:stdOutConsumer] stdErr:[FBProcessOutput outputForDataConsumer:stdErrConsumer]];
   // List test for app test bundle, so we use app binary instead of xctest to load test bundle.
   if ([FBBundleDescriptor isApplicationAtPath:configuration.runnerAppPath]) {
     // Since we're loading the test bundle in app binary's process without booting a simulator,
@@ -260,7 +260,7 @@
 
 +(FBFuture<FBFuture<NSNumber *> *> *)listTestProcessWithSpawnConfiguration:(FBProcessSpawnConfiguration *)spawnConfiguration onTarget:(id<FBiOSTarget, FBProcessSpawnCommands>)target timeout:(NSTimeInterval )timeout logger:(id<FBControlCoreLogger>)logger
 {
-  return [[target launchProcess:spawnConfiguration] onQueue:target.workQueue map:^id _Nonnull(IDBProcess * _Nonnull process) {
+  return [[target launchProcess:spawnConfiguration] onQueue:target.workQueue map:^id _Nonnull(FBSubprocess * _Nonnull process) {
     return [FBXCTestProcess ensureProcess:process completesWithin:timeout crashLogCommands:nil queue:target.workQueue logger:logger];
   }];
 }

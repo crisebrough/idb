@@ -22,7 +22,7 @@ static NSTimeInterval const KillBackoffTimeout = 1;
 
 #pragma mark Public
 
-+ (FBFuture<NSNumber *> *)ensureProcess:(IDBProcess *)process completesWithin:(NSTimeInterval)timeout crashLogCommands:(id<FBCrashLogCommands>)crashLogCommands queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
++ (FBFuture<NSNumber *> *)ensureProcess:(FBSubprocess *)process completesWithin:(NSTimeInterval)timeout crashLogCommands:(id<FBCrashLogCommands>)crashLogCommands queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
 {
   // The start date of the process appear slightly older than we might think, so avoid missing it by a few seconds.
   NSDate *startDate = [NSDate.date dateByAddingTimeInterval:CrashLogStartDateFuzz];
@@ -74,9 +74,9 @@ static NSTimeInterval const KillBackoffTimeout = 1;
 
 #pragma mark Private
 
-+ (FBFuture<id> *)performSampleStackshotOnProcess:(IDBProcess *)process forTimeout:(NSTimeInterval)timeout queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
++ (FBFuture<id> *)performSampleStackshotOnProcess:(FBSubprocess *)process forTimeout:(NSTimeInterval)timeout queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
 {
-  return [[[IDBProcessFetcher
+  return [[[FBProcessFetcher
     performSampleStackshotForProcessIdentifier:process.processIdentifier  queue:queue]
     onQueue:queue fmap:^FBFuture<id> *(NSString *stackshot) {
       return [[FBXCTestError
@@ -93,7 +93,7 @@ static NSTimeInterval const KillBackoffTimeout = 1;
     }];
 }
 
-+ (FBFuture<NSNumber *> *)performCrashLogQueryForProcess:(IDBProcess *)process startDate:(NSDate *)startDate crashLogCommands:(id<FBCrashLogCommands>)crashLogCommands crashLogWaitTime:(NSTimeInterval)crashLogWaitTime queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
++ (FBFuture<NSNumber *> *)performCrashLogQueryForProcess:(FBSubprocess *)process startDate:(NSDate *)startDate crashLogCommands:(id<FBCrashLogCommands>)crashLogCommands crashLogWaitTime:(NSTimeInterval)crashLogWaitTime queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
 {
   [logger logFormat:@"xctest process (%d) died prematurely, checking for crash log for %f seconds", process.processIdentifier, crashLogWaitTime];
   return [[[FBXCTestProcess
@@ -106,7 +106,7 @@ static NSTimeInterval const KillBackoffTimeout = 1;
     }];
 }
 
-+ (FBFuture<FBCrashLogInfo *> *)crashLogsForTerminationOfProcess:(IDBProcess *)process since:(NSDate *)sinceDate crashLogCommands:(id<FBCrashLogCommands>)crashLogCommands crashLogWaitTime:(NSTimeInterval)crashLogWaitTime queue:(dispatch_queue_t)queue
++ (FBFuture<FBCrashLogInfo *> *)crashLogsForTerminationOfProcess:(FBSubprocess *)process since:(NSDate *)sinceDate crashLogCommands:(id<FBCrashLogCommands>)crashLogCommands crashLogWaitTime:(NSTimeInterval)crashLogWaitTime queue:(dispatch_queue_t)queue
 {
   NSPredicate *predicate = [NSCompoundPredicate andPredicateWithSubpredicates:@[
     [FBCrashLogInfo predicateForCrashLogsWithProcessID:process.processIdentifier],

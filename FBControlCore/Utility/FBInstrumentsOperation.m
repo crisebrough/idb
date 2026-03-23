@@ -128,7 +128,11 @@ const NSTimeInterval DefaultInstrumentsLaunchRetryTimeout = 360.0;
     withStdErrToLogger:compositeLogger]
     withTaskLifecycleLoggingTo:logger]
     start]
+<<<<<<< HEAD
     onQueue:target.asyncQueue fmap:^ FBFuture * (IDBProcess *task) {
+=======
+    onQueue:target.asyncQueue fmap:^ FBFuture * (FBSubprocess *task) {
+>>>>>>> upstream/main
       return [instrumentsConsumer.hasStartedLoadingTemplate
         onQueue:target.asyncQueue fmap:^ FBFuture * (id _) {
         [logger logFormat:@"Waiting for %f seconds for instruments to start properly", configuration.timings.launchErrorTimeout];
@@ -145,14 +149,22 @@ const NSTimeInterval DefaultInstrumentsLaunchRetryTimeout = 360.0;
         }];
     }]
     // Yay instruments started properly
+<<<<<<< HEAD
     onQueue:target.asyncQueue map:^ FBInstrumentsOperation * (IDBProcess *task) {
+=======
+    onQueue:target.asyncQueue map:^ FBInstrumentsOperation * (FBSubprocess *task) {
+>>>>>>> upstream/main
       [logger logFormat:@"Started instruments %@", task];
 
       return [[FBInstrumentsOperation alloc] initWithTask:task traceDir:[NSURL fileURLWithPath:traceFile] configuration:configuration queue:queue logger:logger];
     }];
 }
 
+<<<<<<< HEAD
 - (instancetype)initWithTask:(IDBProcess *)task traceDir:(NSURL *)traceDir configuration:(FBInstrumentsConfiguration *)configuration queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
+=======
+- (instancetype)initWithTask:(FBSubprocess *)task traceDir:(NSURL *)traceDir configuration:(FBInstrumentsConfiguration *)configuration queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
+>>>>>>> upstream/main
 {
   self = [super init];
   if (!self) {

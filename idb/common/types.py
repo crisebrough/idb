@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import timedelta
 from enum import Enum
 from io import StringIO
-from typing import Dict, IO, List, Optional, Set, Tuple, Union
+from typing import IO, List, Optional, Set, Tuple, Union
 
 from python.migrations.py310 import StrEnum310
 
@@ -618,6 +618,17 @@ class Client(ABC):
         pass
 
     @abstractmethod
+    async def multi_tap(
+        self,
+        x: float,
+        y: float,
+        count: int = 2,
+        duration: float | None = None,
+        pause: float = 0.1,
+    ) -> None:
+        pass
+
+    @abstractmethod
     async def button(
         self, button_type: HIDButtonType, duration: float | None = None
     ) -> None:
@@ -647,6 +658,14 @@ class Client(ABC):
 
     @abstractmethod
     async def contacts_update(self, contacts_path: str) -> None:
+        pass
+
+    @abstractmethod
+    async def contacts_clear(self) -> None:
+        pass
+
+    @abstractmethod
+    async def photos_clear(self) -> None:
         pass
 
     @abstractmethod

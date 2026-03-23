@@ -247,9 +247,17 @@ static NSString *const IconJSONFile = @"icons.json";
 
 - (FBFuture<IconLayoutType> *)getIconLayout
 {
+  return [[self getRawIconState:2] onQueue:self.queue map:^(id result) {
+    return (IconLayoutType)result;
+  }];
+}
+
+- (FBFuture<id> *)getRawIconState:(NSUInteger)formatVersion
+{
+  NSString *formatVersionString = [NSString stringWithFormat:@"%lu", (unsigned long)formatVersion];
   return [FBFuture
-    onQueue:self.queue resolveValue:^ IconLayoutType (NSError **error) {
-      IconLayoutType result = [self.connection sendAndReceiveMessage:@{@"command": @"getIconState", @"formatVersion": @"2"} error:error];
+    onQueue:self.queue resolveValue:^ id (NSError **error) {
+      id result = [self.connection sendAndReceiveMessage:@{@"command": @"getIconState", @"formatVersion": formatVersionString} error:error];
       if (!result) {
         return nil;
       }
@@ -273,6 +281,18 @@ static size_t IconLayoutSize = 4;
         return nil;
       }
       return NSNull.null;
+    }];
+}
+
+- (FBFuture<NSDictionary<NSString *, id> *> *)getHomeScreenIconMetrics
+{
+  return [FBFuture
+    onQueue:self.queue resolveValue:^ NSDictionary<NSString *, id> * (NSError **error) {
+      NSDictionary<NSString *, id> *result = [self.connection sendAndReceiveMessage:@{@"command": @"getHomeScreenIconMetrics"} error:error];
+      if (!result) {
+        return nil;
+      }
+      return result;
     }];
 }
 

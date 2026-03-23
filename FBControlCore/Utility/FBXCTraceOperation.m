@@ -85,13 +85,21 @@ const NSTimeInterval DefaultXCTraceRecordStopTimeout = 600.0; // 600s
     withStdErrToLogger:logger]
     withTaskLifecycleLoggingTo:logger]
     start]
+<<<<<<< HEAD
     onQueue:target.asyncQueue map:^ FBXCTraceRecordOperation * (IDBProcess *task) {
+=======
+    onQueue:target.asyncQueue map:^ FBXCTraceRecordOperation * (FBSubprocess *task) {
+>>>>>>> upstream/main
       [logger logFormat:@"Started xctrace %@", task];
       return [[FBXCTraceRecordOperation alloc] initWithTask:task traceDir:[NSURL fileURLWithPath:traceFile] configuration:configuration queue:queue logger:logger];
     }];
 }
 
+<<<<<<< HEAD
 - (instancetype)initWithTask:(IDBProcess *)task traceDir:(NSURL *)traceDir configuration:(FBXCTraceRecordConfiguration *)configuration queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
+=======
+- (instancetype)initWithTask:(FBSubprocess *)task traceDir:(NSURL *)traceDir configuration:(FBXCTraceRecordConfiguration *)configuration queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger
+>>>>>>> upstream/main
 {
   self = [super init];
   if (!self) {

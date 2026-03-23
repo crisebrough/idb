@@ -11,10 +11,9 @@
 #import "FBBinaryDescriptor.h"
 #import "FBCollectionInformation.h"
 #import "FBControlCoreError.h"
-#import "FBControlCoreError.h"
 #import "FBControlCoreGlobalConfiguration.h"
 #import "FBControlCoreLogger.h"
-#import "FBProcess.h"
+#import "FBSubprocess.h"
 #import "FBProcessBuilder.h"
 
 @implementation FBBundleDescriptor (Application)

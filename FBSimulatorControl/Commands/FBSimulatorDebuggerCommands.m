@@ -11,7 +11,11 @@
 
 @interface FBSimulatorDebugServer : NSObject <FBDebugServer>
 
+<<<<<<< HEAD
 @property (nonatomic, strong, readonly) IDBProcess<NSNull *, id<FBControlCoreLogger>, id<FBControlCoreLogger>> *task;
+=======
+@property (nonatomic, strong, readonly) FBSubprocess<NSNull *, id<FBControlCoreLogger>, id<FBControlCoreLogger>> *task;
+>>>>>>> upstream/main
 
 @end
 
@@ -20,7 +24,11 @@
 @synthesize lldbBootstrapCommands = _lldbBootstrapCommands;
 @synthesize completed = _completed;
 
+<<<<<<< HEAD
 - (instancetype)initWithDebugServerTask:(IDBProcess<NSNull *, id<FBControlCoreLogger>, id<FBControlCoreLogger>> *)task lldbBootstrapCommands:(NSArray<NSString *> *)lldbBootstrapCommands
+=======
+- (instancetype)initWithDebugServerTask:(FBSubprocess<NSNull *, id<FBControlCoreLogger>, id<FBControlCoreLogger>> *)task lldbBootstrapCommands:(NSArray<NSString *> *)lldbBootstrapCommands
+>>>>>>> upstream/main
 {
   self = [super init];
   if (!self) {
@@ -40,7 +48,11 @@
 
 - (FBFuture<NSNull *> *)completed
 {
+<<<<<<< HEAD
   IDBProcess *task = self.task;
+=======
+  FBSubprocess *task = self.task;
+>>>>>>> upstream/main
   return [[[task
     statLoc]
     mapReplace:NSNull.null]
@@ -106,7 +118,11 @@
     onQueue:self.simulator.workQueue fmap:^(id<FBLaunchedApplication> process) {
       return [self debugServerTaskForPort:port processIdentifier:process.processIdentifier];
     }]
+<<<<<<< HEAD
     onQueue:self.simulator.workQueue map:^(IDBProcess<NSNull *, id<FBControlCoreLogger>, id<FBControlCoreLogger>> *task) {
+=======
+    onQueue:self.simulator.workQueue map:^(FBSubprocess<NSNull *, id<FBControlCoreLogger>, id<FBControlCoreLogger>> *task) {
+>>>>>>> upstream/main
       NSArray<NSString *> *lldbBootstrapCommands = @[
         [NSString stringWithFormat:@"process connect connect://localhost:%d", port]
       ];
@@ -116,7 +132,11 @@
 
 #pragma mark Private
 
+<<<<<<< HEAD
 - (FBFuture<IDBProcess<NSNull *, id<FBControlCoreLogger>, id<FBControlCoreLogger>> *> *)debugServerTaskForPort:(in_port_t)port processIdentifier:(pid_t)processIdentifier
+=======
+- (FBFuture<FBSubprocess<NSNull *, id<FBControlCoreLogger>, id<FBControlCoreLogger>> *> *)debugServerTaskForPort:(in_port_t)port processIdentifier:(pid_t)processIdentifier
+>>>>>>> upstream/main
 {
   return [[[[[IDBProcessBuilder
     withLaunchPath:self.debugServerPath]

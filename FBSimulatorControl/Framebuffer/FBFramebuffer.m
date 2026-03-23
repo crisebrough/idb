@@ -28,19 +28,17 @@
 
 #import "FBSimulator+Private.h"
 #import "FBSimulatorError.h"
+#import "FBPeriodicStatsTimer.h"
 
 @interface FBFramebuffer ()
 
 @property (nonatomic, strong, readonly) NSMapTable<id<FBFramebufferConsumer>, NSUUID *> *consumers;
 @property (nonatomic, strong, readonly) id<FBControlCoreLogger> logger;
-
-@end
-
-@interface FBFramebuffer_Legacy : FBFramebuffer
-
 @property (nonatomic, strong, readonly) id<SimDisplayIOSurfaceRenderable, SimDisplayRenderable> surface;
 
-- (instancetype)initWithSurface:(id<SimDisplayIOSurfaceRenderable, SimDisplayRenderable>)surface logger:(id<FBControlCoreLogger>)logger;
+@property (nonatomic, assign) FBFramebufferStats stats;
+@property (nonatomic, assign) FBFramebufferStats lastLoggedStats;
+@property (nonatomic, assign) FBPeriodicStatsTimer statsTimer;
 
 @end
 
@@ -72,15 +70,16 @@
       [logger logFormat:@"SimDisplay Class is '%d' which is not the main display '0'", displayClass];
       continue;
     }
-    return [[FBFramebuffer_Legacy alloc] initWithSurface:descriptor logger:logger];
+    return [[FBFramebuffer alloc] initWithSurface:descriptor logger:logger];
   }
   return [[FBSimulatorError
     describeFormat:@"Could not find the Main Screen Surface for Clients %@ in %@", [FBCollectionInformation oneLineDescriptionFromArray:ioClient.ioPorts], ioClient]
     fail:error];
 }
 
-- (instancetype)initWithLogger:(id<FBControlCoreLogger>)logger
+- (instancetype)initWithSurface:(id<SimDisplayIOSurfaceRenderable, SimDisplayRenderable>)surface logger:(id<FBControlCoreLogger>)logger
 {
+  self = [super init];
   if (!self) {
     return nil;
   }
@@ -89,6 +88,8 @@
     mapTableWithKeyOptions:NSPointerFunctionsWeakMemory
     valueOptions:NSPointerFunctionsCopyIn];
   _logger = logger;
+  _surface = surface;
+  _statsTimer = FBPeriodicStatsTimerCreate(5.0);
 
   return self;
 }
@@ -131,38 +132,19 @@
   return false;
 }
 
+#pragma mark Stats
+
+- (FBFramebufferStats)currentStats
+{
+  return self.stats;
+}
+
+- (CFTimeInterval)statsStartTime
+{
+  return self.statsTimer.startTime;
+}
+
 #pragma mark Private
-
-- (IOSurface *)extractImmediatelyAvailableSurface
-{
-  return nil;
-}
-
-- (void)registerConsumer:(id<FBFramebufferConsumer>)consumer uuid:(NSUUID *)uuid queue:(dispatch_queue_t)queue
-{
-  NSAssert(NO, @"-[%@ %@] is abstract and should be overridden", NSStringFromClass(self.class), NSStringFromSelector(_cmd));
-}
-
-- (void)unregisterConsumer:(id<FBFramebufferConsumer>)consumer uuid:(NSUUID *)uuid
-{
-  NSAssert(NO, @"-[%@ %@] is abstract and should be overridden", NSStringFromClass(self.class), NSStringFromSelector(_cmd));
-}
-
-@end
-
-@implementation FBFramebuffer_Legacy
-
-- (instancetype)initWithSurface:(id<SimDisplayIOSurfaceRenderable, SimDisplayRenderable>)surface logger:(id<FBControlCoreLogger>)logger
-{
-  self = [super initWithLogger:logger];
-  if (!self) {
-    return nil;
-  }
-
-  _surface = surface;
-
-  return self;
-}
 
 - (IOSurface *)extractImmediatelyAvailableSurface
 {
@@ -176,6 +158,7 @@
 - (void)registerConsumer:(id<FBFramebufferConsumer>)consumer uuid:(NSUUID *)uuid queue:(dispatch_queue_t)queue
 {
   void (^ioSurfaceChanged)(IOSurface *) = ^void(IOSurface *surface) {
+<<<<<<< HEAD
     // Retain the IOSurface to prevent deallocation during async dispatch
     IOSurfaceRef surfaceRef = NULL;
     if (surface) {
@@ -183,6 +166,14 @@
       CFRetain(surfaceRef);
     }
 
+=======
+    FBFramebufferStats s = self.stats;
+    s.ioSurfaceChangeCount += 1;
+    self.stats = s;
+    if (s.ioSurfaceChangeCount == 1) {
+      [self.logger.info logFormat:@"First IOSurface change callback, surface=%@", surface];
+    }
+>>>>>>> upstream/main
     dispatch_async(queue, ^{
       [consumer didChangeIOSurface:surface];
 
@@ -208,8 +199,67 @@
     }
   }
 
+<<<<<<< HEAD
   // damageRectanglesCallback is not part of the SimDisplayIOSurfaceRenderable protocol
   // It may exist on some implementations but we should not rely on it
+=======
+  [self.surface registerCallbackWithUUID:uuid damageRectanglesCallback:^(NSArray<NSValue *> *frames) {
+    FBFramebufferStats s = self.stats;
+    s.damageCallbackCount += 1;
+    s.damageRectCount += frames.count;
+    if (frames.count == 0) {
+      s.emptyDamageCallbackCount += 1;
+    }
+    self.stats = s;
+    [self logStatsIfNeeded];
+    dispatch_async(queue, ^{
+      [consumer didReceiveDamageRect];
+    });
+  }];
+>>>>>>> upstream/main
+}
+
+- (void)logStatsIfNeeded
+{
+  FBPeriodicStatsTimer timer = self.statsTimer;
+  CFTimeInterval intervalDuration, totalElapsed;
+  if (!FBPeriodicStatsTimerTick(&timer, &intervalDuration, &totalElapsed)) {
+    if (timer.startTime != self.statsTimer.startTime) {
+      // First tick — timer was just initialized.
+      self.statsTimer = timer;
+      [self.logger.info logFormat:@"First damage callback received"];
+    }
+    return;
+  }
+  self.statsTimer = timer;
+
+  FBFramebufferStats current = self.stats;
+  FBFramebufferStats last = self.lastLoggedStats;
+  NSUInteger intervalCallbacks = current.damageCallbackCount - last.damageCallbackCount;
+  NSUInteger intervalRects = current.damageRectCount - last.damageRectCount;
+  NSUInteger intervalEmpty = current.emptyDamageCallbackCount - last.emptyDamageCallbackCount;
+  NSUInteger intervalIOSurface = current.ioSurfaceChangeCount - last.ioSurfaceChangeCount;
+  self.lastLoggedStats = current;
+
+  double intervalRate = intervalDuration > 0 ? (double)intervalCallbacks / intervalDuration : 0;
+  double totalRate = totalElapsed > 0 ? (double)current.damageCallbackCount / totalElapsed : 0;
+
+  [self.logger.info logFormat:
+    @"Framebuffer stats (interval): %lu damage callbacks in %.1fs (%.1f/s, %lu rects, %lu empty) — %lu IOSurface changes",
+    (unsigned long)intervalCallbacks,
+    intervalDuration,
+    intervalRate,
+    (unsigned long)intervalRects,
+    (unsigned long)intervalEmpty,
+    (unsigned long)intervalIOSurface];
+  [self.logger.info logFormat:
+    @"Framebuffer stats (total): %lu damage callbacks in %.1fs (%.1f/s, %lu rects, %lu empty) — %lu IOSurface changes",
+    (unsigned long)current.damageCallbackCount,
+    totalElapsed,
+    totalRate,
+    (unsigned long)current.damageRectCount,
+    (unsigned long)current.emptyDamageCallbackCount,
+    (unsigned long)current.ioSurfaceChangeCount];
 }
 
 - (void)unregisterConsumer:(id<FBFramebufferConsumer>)consumer uuid:(NSUUID *)uuid

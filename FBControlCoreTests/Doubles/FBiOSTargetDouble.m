@@ -63,7 +63,11 @@
   return [FBFuture futureWithError:[[FBControlCoreError describe:@"Unimplemented"] build]];
 }
 
+<<<<<<< HEAD
 - (FBFuture<IDBProcess *> *)launchApplication:(FBApplicationLaunchConfiguration *)configuration
+=======
+- (FBFuture<FBSubprocess *> *)launchApplication:(FBApplicationLaunchConfiguration *)configuration
+>>>>>>> upstream/main
 {
   return [FBFuture futureWithError:[[FBControlCoreError describe:@"Unimplemented"] build]];
 }

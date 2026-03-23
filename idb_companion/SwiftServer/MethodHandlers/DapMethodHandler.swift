@@ -21,7 +21,7 @@ struct DapMethodHandler {
     guard case let .start(start) = try await requestStream.requiredNext.control
     else { throw GRPCStatus(code: .failedPrecondition, message: "Dap command expected a Start messaged in the beginning of the Stream") }
 
-    let writer = IDBProcessInput<FBDataConsumer>.fromConsumer() as! IDBProcessInput<AnyObject>
+    let writer = FBProcessInput<FBDataConsumer>.fromConsumer() as! FBProcessInput<AnyObject>
     let dapProcess = try await startDapServer(startRequest: start, processInput: writer, responseStream: responseStream)
 
     let tenHours: UInt64 = 36000 * 1000000000
@@ -37,7 +37,7 @@ struct DapMethodHandler {
     try await responseStream.send(stoppedResponse)
   }
 
-  private func startDapServer(startRequest: Idb_DapRequest.Start, processInput: IDBProcessInput<AnyObject>, responseStream: GRPCAsyncResponseStreamWriter<Idb_DapResponse>) async throws -> IDBProcess<AnyObject, FBDataConsumer, NSString> {
+  private func startDapServer(startRequest: Idb_DapRequest.Start, processInput: FBProcessInput<AnyObject>, responseStream: GRPCAsyncResponseStreamWriter<Idb_DapResponse>) async throws -> FBSubprocess<AnyObject, FBDataConsumer, NSString> {
 
     let lldbVSCode = "dap/\(startRequest.debuggerPkgID)/usr/bin/lldb-vscode"
 
@@ -58,7 +58,7 @@ struct DapMethodHandler {
     return process
   }
 
-  private func consumeElements(from requestStream: GRPCAsyncRequestStream<Idb_DapRequest>, to writer: IDBProcessInput<AnyObject>, dapProcess: IDBProcess<AnyObject, FBDataConsumer, NSString>) async throws {
+  private func consumeElements(from requestStream: GRPCAsyncRequestStream<Idb_DapRequest>, to writer: FBProcessInput<AnyObject>, dapProcess: FBSubprocess<AnyObject, FBDataConsumer, NSString>) async throws {
     for try await request in requestStream {
       switch request.control {
       case .start:

@@ -19,7 +19,11 @@ static const size_t IDBProcessOutputErrorMessageLength = 200;
 /**
  A representation of a process that has been launched.
  */
+<<<<<<< HEAD:FBControlCore/Tasks/FBProcess.h
 @interface IDBProcess <StdInType : id, StdOutType : id, StdErrType : id> : NSObject
+=======
+@interface FBSubprocess <StdInType : id, StdOutType : id, StdErrType : id> : NSObject
+>>>>>>> upstream/main:FBControlCore/Tasks/FBSubprocess.h
 
 #pragma mark Properties
 
@@ -83,11 +87,19 @@ static const size_t IDBProcessOutputErrorMessageLength = 200;
 
  @param processIdentifier the process identifier of the launched process
  @param statLoc a future that will fire when the process has terminated. The value is that of waitpid(2).
+<<<<<<< HEAD:FBControlCore/Tasks/FBProcess.h
  @param exitCode a future that will fire when the process exits. See -[IDBProcess exitCode]
  @param signal a future that will fire when the process is signalled. See -[IDBProcess signal]
  @param configuration the configuration the process was launched with.
  @param queue the queue to perform actions on.
  @return an implementation of IDBProcess.
+=======
+ @param exitCode a future that will fire when the process exits. See -[FBSubprocess exitCode]
+ @param signal a future that will fire when the process is signalled. See -[FBSubprocess signal]
+ @param configuration the configuration the process was launched with.
+ @param queue the queue to perform actions on.
+ @return an implementation of FBSubprocess.
+>>>>>>> upstream/main:FBControlCore/Tasks/FBSubprocess.h
  */
 - (instancetype)initWithProcessIdentifier:(pid_t)processIdentifier statLoc:(FBFuture<NSNumber *> *)statLoc exitCode:(FBFuture<NSNumber *> *)exitCode signal:(FBFuture<NSNumber *> *)signal configuration:(FBProcessSpawnConfiguration *)configuration queue:(dispatch_queue_t)queue;
 
@@ -98,7 +110,11 @@ static const size_t IDBProcessOutputErrorMessageLength = 200;
  @param logger an optional logger to log process lifecycle events to.
  @return a future that resolves with the launched process once it has been started.
  */
+<<<<<<< HEAD:FBControlCore/Tasks/FBProcess.h
 + (FBFuture<IDBProcess *> *)launchProcessWithConfiguration:(FBProcessSpawnConfiguration *)configuration logger:(id<FBControlCoreLogger>)logger;
+=======
++ (FBFuture<FBSubprocess *> *)launchProcessWithConfiguration:(FBProcessSpawnConfiguration *)configuration logger:(id<FBControlCoreLogger>)logger;
+>>>>>>> upstream/main:FBControlCore/Tasks/FBSubprocess.h
 
 #pragma mark Methods
 
@@ -107,7 +123,11 @@ static const size_t IDBProcessOutputErrorMessageLength = 200;
  Cancelling this future will have no effect.
  
  @param acceptableExitCodes the exit codes to check for, must not be nil.
+<<<<<<< HEAD:FBControlCore/Tasks/FBProcess.h
  @return a Future with the same base behaviour as -[IDBProcess exitCode] with additional checking of codes.
+=======
+ @return a Future with the same base behaviour as -[FBSubprocess exitCode] with additional checking of codes.
+>>>>>>> upstream/main:FBControlCore/Tasks/FBSubprocess.h
  */
 - (FBFuture<NSNumber *> *)exitedWithCodes:(NSSet<NSNumber *> *)acceptableExitCodes;
 

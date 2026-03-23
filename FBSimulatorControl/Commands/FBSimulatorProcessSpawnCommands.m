@@ -44,7 +44,11 @@
 
 #pragma mark FBSimulatorProcessSpawnCommands Implementation
 
+<<<<<<< HEAD
 - (FBFuture<IDBProcess *> *)launchProcess:(FBProcessSpawnConfiguration *)configuration
+=======
+- (FBFuture<FBSubprocess *> *)launchProcess:(FBProcessSpawnConfiguration *)configuration
+>>>>>>> upstream/main
 {
   FBSimulator *simulator = self.simulator;
 
@@ -73,7 +77,11 @@
 
 #pragma mark Private
 
+<<<<<<< HEAD
 + (FBFuture<IDBProcess *> *)launchProcessWithSimulator:(FBSimulator *)simulator configuration:(FBProcessSpawnConfiguration *)configuration attachment:(FBProcessIOAttachment *)attachment
+=======
++ (FBFuture<FBSubprocess *> *)launchProcessWithSimulator:(FBSimulator *)simulator configuration:(FBProcessSpawnConfiguration *)configuration attachment:(FBProcessIOAttachment *)attachment
+>>>>>>> upstream/main
 {
   // Prepare captured futures
   id<FBControlCoreLogger> logger = simulator.logger;
@@ -117,7 +125,7 @@
       // This would not be an issue if using simctl directly, as the stdout/stderr of the simctl process would close when the simctl process terminates.
       // However, using the simctl approach, we don't get the pid of the spawned process, this is merely logged internally.
       // Failing to close this end of the file descriptor would lead to the write-end of any pipe to not be closed and therefore it would leak.
-      
+
       [attachment.stdOut close];
       [attachment.stdErr close];
     }
@@ -130,12 +138,20 @@
       }
   }];
 
+<<<<<<< HEAD
   // Map to the IDBProcess implementation.
+=======
+  // Map to the FBSubprocess implementation.
+>>>>>>> upstream/main
   return [launchFuture
     onQueue:simulator.workQueue map:^(NSNumber *processIdentifierNumber) {
       // Wrap in the container object
       pid_t processIdentifier = processIdentifierNumber.intValue;
+<<<<<<< HEAD
       return [[IDBProcess alloc] initWithProcessIdentifier:processIdentifier statLoc:statLoc exitCode:exitCode signal:signal configuration:configuration queue:simulator.workQueue];
+=======
+      return [[FBSubprocess alloc] initWithProcessIdentifier:processIdentifier statLoc:statLoc exitCode:exitCode signal:signal configuration:configuration queue:simulator.workQueue];
+>>>>>>> upstream/main
     }];
 }
 
@@ -162,6 +178,7 @@
       return NO;
     case FBProcessSpawnModePosixSpawn:
       return YES;
+    case FBProcessSpawnModeDefault:
     default:
       // Default behaviour is to use launchd if booted, otherwise use standalone.
       return simulator.state != FBiOSTargetStateBooted;

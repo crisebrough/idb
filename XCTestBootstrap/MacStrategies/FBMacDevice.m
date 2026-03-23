@@ -24,7 +24,7 @@
 @interface FBMacDevice()
 
 @property (nonatomic, strong) NSMutableDictionary<NSString *, FBBundleDescriptor *> *bundleIDToProductMap;
-@property (nonatomic, strong) NSMutableDictionary<NSString *, IDBProcess *> *bundleIDToRunningTask;
+@property (nonatomic, strong) NSMutableDictionary<NSString *, FBSubprocess *> *bundleIDToRunningTask;
 @property (nonatomic, strong) NSXPCConnection *connection;
 @property (nonatomic, copy) NSString *workingDirectory;
 @property (nonatomic, assign, readonly) BOOL catalyst;
@@ -225,7 +225,7 @@
 
 - (nonnull FBFuture<NSNumber *> *)processIDWithBundleID:(nonnull NSString *)bundleID
 {
-  IDBProcess *task = self.bundleIDToRunningTask[bundleID];
+  FBSubprocess *task = self.bundleIDToRunningTask[bundleID];
   if (!task) {
     NSError *error = [XCTestBootstrapError errorForFormat:@"Application with bundleID (%@) was not launched by XCTestBootstrap", bundleID];
     return [FBFuture futureWithError:error];
@@ -328,7 +328,7 @@
 
 - (nonnull FBFuture<NSNull *> *)killApplicationWithBundleID:(nonnull NSString *)bundleID
 {
-  IDBProcess *task = self.bundleIDToRunningTask[bundleID];
+  FBSubprocess *task = self.bundleIDToRunningTask[bundleID];
   if (!task) {
     NSError *error = [XCTestBootstrapError errorForFormat:@"Application with bundleID (%@) was not launched by XCTestBootstrap", bundleID];
     return [FBFuture futureWithError:error];
@@ -346,12 +346,12 @@
       describeFormat:@"Could not find application for %@", configuration.bundleID]
       failFuture];
   }
-  return [[[[[IDBProcessBuilder
+  return [[[[[FBProcessBuilder
     withLaunchPath:bundle.binary.path]
     withArguments:configuration.arguments]
     withEnvironment:configuration.environment]
     start]
-    onQueue:self.workQueue map:^ FBMacLaunchedApplication* (IDBProcess *task) {
+    onQueue:self.workQueue map:^ FBMacLaunchedApplication* (FBSubprocess *task) {
       self.bundleIDToRunningTask[bundle.identifier] = task;
       return [[FBMacLaunchedApplication alloc]
        initWithBundleID:bundle.identifier
@@ -361,12 +361,12 @@
   }];
 }
 
-- (nonnull FBFuture<NSDictionary<NSString *,IDBProcessInfo *> *> *)runningApplications
+- (nonnull FBFuture<NSDictionary<NSString *,FBProcessInfo *> *> *)runningApplications
 {
-  NSMutableDictionary<NSString *, IDBProcessInfo *> *runningProcesses = @{}.mutableCopy;
-  IDBProcessFetcher *fetcher = [IDBProcessFetcher new];
+  NSMutableDictionary<NSString *, FBProcessInfo *> *runningProcesses = @{}.mutableCopy;
+  FBProcessFetcher *fetcher = [FBProcessFetcher new];
   for (NSString *bundleId in self.bundleIDToRunningTask.allKeys) {
-    IDBProcess *task = self.bundleIDToRunningTask[bundleId];
+    FBSubprocess *task = self.bundleIDToRunningTask[bundleId];
     runningProcesses[bundleId] = [fetcher processInfoFor:task.processIdentifier];
   }
   return [FBFuture futureWithResult:runningProcesses];
@@ -530,9 +530,9 @@
     failFuture];
 }
 
-- (FBFuture<IDBProcess *> *)launchProcess:(FBProcessSpawnConfiguration *)configuration
+- (FBFuture<FBSubprocess *> *)launchProcess:(FBProcessSpawnConfiguration *)configuration
 {
-  return [IDBProcess launchProcessWithConfiguration:configuration logger:self.logger];
+  return [FBSubprocess launchProcessWithConfiguration:configuration logger:self.logger];
 }
 
 @end

@@ -102,14 +102,22 @@ struct VideoStreamMethodHandler {
     }
 
     let framesPerSecond = start.fps > 0 ? NSNumber(value: start.fps) : nil
-    let avgBitrate = start.avgBitrate > 0 ? NSNumber(value: start.avgBitrate) : nil
-    let encoding = try streamEncoding(from: start.format)
+    let format = streamFormat(from: start.format)
+
+    let rateControl: FBVideoStreamRateControl?
+    if start.avgBitrate > 0 {
+      rateControl = .bitrate(NSNumber(value: start.avgBitrate))
+    } else if start.compressionQuality > 0 {
+      rateControl = .quality(NSNumber(value: start.compressionQuality))
+    } else {
+      rateControl = nil
+    }
+
     let config = FBVideoStreamConfiguration(
-      encoding: encoding,
+      format: format,
       framesPerSecond: framesPerSecond,
-      compressionQuality: .init(value: start.compressionQuality),
+      rateControl: rateControl,
       scaleFactor: .init(value: start.scaleFactor),
-      avgBitrate: avgBitrate,
       keyFrameRate: .init(value: start.keyFrameRate))
 
     let videoStream = try await BridgeFuture.value(target.createStream(with: config))
@@ -119,18 +127,18 @@ struct VideoStreamMethodHandler {
     return videoStream
   }
 
-  private func streamEncoding(from requestFormat: Idb_VideoStreamRequest.Format) throws -> FBVideoStreamEncoding {
+  private func streamFormat(from requestFormat: Idb_VideoStreamRequest.Format) -> FBVideoStreamFormat {
     switch requestFormat {
     case .h264:
-      return .H264
+      return .compressedVideo(withCodec: .H264, transport: .annexB)
     case .rbga:
-      return .BGRA
+      return .bgra()
     case .mjpeg:
-      return .MJPEG
+      return .mjpeg()
     case .minicap:
-      return .minicap
+      return .minicap()
     case .i420, .UNRECOGNIZED:
-      throw GRPCStatus(code: .invalidArgument, message: "Unrecognized video format")
+      return .compressedVideo(withCodec: .H264, transport: .annexB)
     }
   }
 }

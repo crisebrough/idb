@@ -7,7 +7,7 @@
 
 #import "FBLogCommands.h"
 
-#import "FBProcess.h"
+#import "FBSubprocess.h"
 
 @interface IDBProcessLogOperation ()
 
@@ -19,7 +19,11 @@
 
 @synthesize consumer = _consumer;
 
+<<<<<<< HEAD
 - (instancetype)initWithProcess:(IDBProcess *)process consumer:(id<FBDataConsumer>)consumer queue:(dispatch_queue_t)queue
+=======
+- (instancetype)initWithProcess:(FBSubprocess *)process consumer:(id<FBDataConsumer>)consumer queue:(dispatch_queue_t)queue
+>>>>>>> upstream/main
 {
   self = [self init];
   if (!self) {
@@ -35,7 +39,11 @@
 
 - (FBFuture<NSNull *> *)completed
 {
+<<<<<<< HEAD
   IDBProcess *process = self.process;
+=======
+  FBSubprocess *process = self.process;
+>>>>>>> upstream/main
   return [[[process
     exitedWithCodes:[NSSet setWithObject:@0]]
     mapReplace:NSNull.null]

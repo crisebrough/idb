@@ -12,7 +12,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+<<<<<<< HEAD
 @class IDBProcess;
+=======
+@class FBSubprocess;
+>>>>>>> upstream/main
 @class FBProcessIOAttachment;
 @class FBProcessSpawnConfiguration;
 
@@ -29,7 +33,11 @@ NS_ASSUME_NONNULL_BEGIN
  @param configuration the configuration of the process to launch.
  @return A future wrapping the launched process.
  */
+<<<<<<< HEAD
 - (FBFuture<IDBProcess *> *)launchProcess:(FBProcessSpawnConfiguration *)configuration;
+=======
+- (FBFuture<FBSubprocess *> *)launchProcess:(FBProcessSpawnConfiguration *)configuration;
+>>>>>>> upstream/main
 
 @end
 

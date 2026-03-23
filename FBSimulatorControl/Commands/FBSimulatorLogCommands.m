@@ -45,15 +45,25 @@
 - (FBFuture<id<FBLogOperation>> *)tailLog:(NSArray<NSString *> *)arguments consumer:(id<FBDataConsumer>)consumer
 {
   return [[self
+<<<<<<< HEAD
     startLogCommand:[IDBProcessLogOperation osLogArgumentsInsertStreamIfNeeded:arguments] consumer:consumer]
     onQueue:self.simulator.workQueue map:^(IDBProcess *process) {
       return [[IDBProcessLogOperation alloc] initWithProcess:process consumer:consumer queue:self.simulator.asyncQueue];
+=======
+    startLogCommand:[FBProcessLogOperation osLogArgumentsInsertStreamIfNeeded:arguments] consumer:consumer]
+    onQueue:self.simulator.workQueue map:^(FBSubprocess *process) {
+      return [[FBProcessLogOperation alloc] initWithProcess:process consumer:consumer queue:self.simulator.asyncQueue];
+>>>>>>> upstream/main
     }];
 }
 
 #pragma mark Private
 
+<<<<<<< HEAD
 - (FBFuture<IDBProcess *> *)startLogCommand:(NSArray<NSString *> *)arguments consumer:(id<FBDataConsumer>)consumer
+=======
+- (FBFuture<FBSubprocess *> *)startLogCommand:(NSArray<NSString *> *)arguments consumer:(id<FBDataConsumer>)consumer
+>>>>>>> upstream/main
 {
   NSError *error = nil;
   NSString *launchPath = [self logExecutablePathWithError:&error];

@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  An implementation of FBiOSTarget for iOS Simulators.
  */
-@interface FBSimulator : NSObject <FBiOSTarget, FBAccessibilityCommands, FBMemoryCommands, FBFileCommands, FBLocationCommands, FBNotificationCommands, FBProcessSpawnCommands, FBSimulatorKeychainCommands, FBSimulatorSettingsCommands, FBSimulatorLifecycleCommands, FBSimulatorLaunchCtlCommands, FBSimulatorMediaCommands, FBXCTestExtendedCommands, FBDapServerCommand, FBSimulatorAccessibilityOperations, FBSimulatorApplicationCommands, FBSimulatorFileCommands>
+@interface FBSimulator : NSObject <FBiOSTarget, FBAccessibilityCommands, FBMemoryCommands, FBFileCommands, FBLocationCommands, FBNotificationCommands, FBProcessSpawnCommands, FBSimulatorKeychainCommands, FBSimulatorSettingsCommands, FBSimulatorLifecycleCommands, FBSimulatorLaunchCtlCommands, FBSimulatorMediaCommands, FBXCTestExtendedCommands, FBDapServerCommand, FBSimulatorApplicationCommands, FBSimulatorFileCommands>
 
 #pragma mark Properties
 
@@ -78,6 +78,31 @@ NS_ASSUME_NONNULL_BEGIN
  The directory path of the expected location of the CoreSimulator logs directory.
  */
 @property (nonatomic, copy, readonly) NSString *coreSimulatorLogsDirectory;
+
+@end
+
+#pragma mark - Accessibility Dispatcher
+
+/**
+ Category for accessibility translation dispatcher access.
+ */
+@interface FBSimulator (FBAccessibilityDispatcher)
+
+/**
+ Creates a translation dispatcher with the given translator.
+ Used by tests to create a dispatcher with a mock translator.
+ @param translator The AXPTranslator (or mock) to use for the dispatcher.
+ @return A new dispatcher instance.
+ */
++ (id)createAccessibilityTranslationDispatcherWithTranslator:(id)translator;
+
+/**
+ Returns the translation dispatcher for accessibility operations.
+ In production, creates/returns the shared instance using the real translator.
+ Test doubles can override this to return a mock dispatcher.
+ @return The translation dispatcher.
+ */
+- (id)accessibilityTranslationDispatcher;
 
 @end
 

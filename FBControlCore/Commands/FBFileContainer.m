@@ -362,7 +362,11 @@ FBFileContainerKind const FBFileContainerKindWallpaper = @"wallpaper";
 {
   return [[[self
     mapToContainedFile:path]
+<<<<<<< HEAD
     onQueue:self.queue fmap:^ FBFuture<IDBProcess<NSNull *, id<FBDataConsumer>, NSData *> *> * (id<FBContainedFile> fileToTail) {
+=======
+    onQueue:self.queue fmap:^ FBFuture<FBSubprocess<NSNull *, id<FBDataConsumer>, NSData *> *> * (id<FBContainedFile> fileToTail) {
+>>>>>>> upstream/main
       NSString *pathOnHostFileSystem = fileToTail.pathOnHostFileSystem;
       if (!pathOnHostFileSystem) {
         return [[FBControlCoreError
@@ -375,7 +379,11 @@ FBFileContainerKind const FBFileContainerKindWallpaper = @"wallpaper";
         withStdOutConsumer:consumer]
         start];
     }]
+<<<<<<< HEAD
     onQueue:self.queue map:^(IDBProcess *process) {
+=======
+    onQueue:self.queue map:^(FBSubprocess *process) {
+>>>>>>> upstream/main
       return [process.statLoc
         onQueue:self.queue respondToCancellation:^{
           return [process sendSignal:SIGTERM backingOffToKillWithTimeout:1 logger:nil];

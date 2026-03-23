@@ -69,8 +69,7 @@
   NSDate *startDate = NSDate.date;
   NSString *methodName = [self.class methodName:invocation simplifiedNaming:self.simplifiedNaming];
   NSArray<NSString *> *descriptionOfArguments = [self.class descriptionOfArguments:invocation];
-  FBEventReporterSubject *beforeSubject = [self.class subjectForBeforeInvocation:methodName descriptionOfArguments:descriptionOfArguments logger:self.logger];
-  [self.eventReporter report:beforeSubject];
+  [self.logger.info logFormat:@"%@ called with: %@", methodName, [FBCollectionInformation oneLineDescriptionFromArray:descriptionOfArguments]];
 
   // Extract the first method argument and retain it, if it exists
   id firstMethodArgument = nil;
@@ -97,12 +96,6 @@
 
 #pragma mark - Subjects
 
-+ (FBEventReporterSubject *)subjectForBeforeInvocation:(NSString *)methodName descriptionOfArguments:(NSArray<NSString *> *)descriptionOfArguments logger:(id<FBControlCoreLogger>)logger
-{
-  [logger.info logFormat:@"%@ called with: %@", methodName, [FBCollectionInformation oneLineDescriptionFromArray:descriptionOfArguments]];
-  return [FBEventReporterSubject subjectForStartedCall:methodName arguments:descriptionOfArguments reportNativeSwiftMethodCall: NO];
-}
-
 + (FBEventReporterSubject *)subjectAfterCompletion:(FBFuture *)future methodName:(NSString *)methodName descriptionOfArguments:(NSArray<NSString *> *)descriptionOfArguments startDate:(NSDate *)startDate firstMethodArgument:(id)firstMethodArgument logger:(id<FBControlCoreLogger>)logger
 {
   NSTimeInterval duration = [NSDate.date timeIntervalSinceDate:startDate];
@@ -114,10 +107,10 @@
   if (error) {
     NSString *message = error.localizedDescription;
     [logger.debug logFormat:@"%@ failed with: %@", methodName, message];
-    return [FBEventReporterSubject subjectForFailingCall:methodName duration:duration message:message size:size arguments:descriptionOfArguments reportNativeSwiftMethodCall: NO];
+    return [FBEventReporterSubject subjectForFailingCall:methodName duration:duration message:message size:size arguments:descriptionOfArguments];
   } else {
     [logger.debug logFormat:@"%@ succeeded", methodName];
-    return [FBEventReporterSubject subjectForSuccessfulCall:methodName duration:duration size:size arguments:descriptionOfArguments reportNativeSwiftMethodCall: NO];
+    return [FBEventReporterSubject subjectForSuccessfulCall:methodName duration:duration size:size arguments:descriptionOfArguments];
   }
 }
 

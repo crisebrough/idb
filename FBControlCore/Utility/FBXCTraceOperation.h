@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import <FBControlCore/FBProcess.h>
+#import <FBControlCore/FBSubprocess.h>
 #import <FBControlCore/FBiOSTargetOperation.h>
 
 extern const NSTimeInterval DefaultXCTraceRecordOperationTimeLimit;
@@ -38,14 +38,22 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (FBFuture<FBXCTraceRecordOperation *> *)operationWithTarget:(id<FBiOSTarget>)target configuration:(FBXCTraceRecordConfiguration *)configuration logger:(id<FBControlCoreLogger>)logger;
 
+<<<<<<< HEAD
 - (instancetype)initWithTask:(IDBProcess *)task traceDir:(NSURL *)traceDir configuration:(FBXCTraceRecordConfiguration *)configuration queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger;
+=======
+- (instancetype)initWithTask:(FBSubprocess *)task traceDir:(NSURL *)traceDir configuration:(FBXCTraceRecordConfiguration *)configuration queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger;
+>>>>>>> upstream/main
 
 #pragma mark Properties
 
 /**
  Task that wraps the operation
  */
+<<<<<<< HEAD
 @property (nonatomic, strong, readonly) IDBProcess *task;
+=======
+@property (nonatomic, strong, readonly) FBSubprocess *task;
+>>>>>>> upstream/main
 
 /**
  The queue to use

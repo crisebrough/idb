@@ -377,7 +377,11 @@ static size_t const MaxPidBufferSize = 5568 * 2 * sizeof(int);  // From 'ulimit 
         causedBy:error]
         failFuture];
     }]
+<<<<<<< HEAD
     onQueue:queue map:^(IDBProcess<NSNull *, NSData *, NSData *> *task) {
+=======
+    onQueue:queue map:^(FBSubprocess<NSNull *, NSData *, NSData *> *task) {
+>>>>>>> upstream/main
       return task.stdOut;
     }];
 }

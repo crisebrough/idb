@@ -12,7 +12,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  An in-memory representation of a launched application.
+<<<<<<< HEAD
  This is distinct from IDBProcess, as exit codes for the process are not available.
+=======
+ This is distinct from FBSubprocess, as exit codes for the process are not available.
+>>>>>>> upstream/main
  However, an event for when termination of the application occurs is communicated through a Future.
  */
 @protocol FBLaunchedApplication <NSObject>

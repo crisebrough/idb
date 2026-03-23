@@ -433,12 +433,12 @@ static FBFuture<FBFuture<NSNull *> *> *CompanionServerFuture(NSString *udid, NSU
                                                debugserverPort:ports.debugserverPort
                                                logger:logger];
 
-      FBIDBCommandExecutor *loggingCommandExecutor = [FBLoggingWrapper wrap:commandExecutor simplifiedNaming:YES eventReporter:IDBConfiguration.swiftEventReporter logger:logger];
+      FBIDBCommandExecutor *loggingCommandExecutor = [FBLoggingWrapper wrap:commandExecutor simplifiedNaming:YES eventReporter:IDBConfiguration.eventReporter logger:logger];
 
       GRPCSwiftServer *swiftServer = [[GRPCSwiftServer alloc]
                                       initWithTarget:target
                                       commandExecutor:loggingCommandExecutor
-                                      reporter:IDBConfiguration.swiftEventReporter
+                                      reporter:IDBConfiguration.eventReporter
                                       logger:logger
                                       ports:ports
                                       error:&err];
@@ -642,12 +642,11 @@ int main(int argc, const char *argv[]) {
 
     NSError *error = nil;
 
-    // Check that xcode-select returns a valid path, throw a big
-    // warning if not
+    // Check that xcode-select returns a valid path, exit with error if not found
     BOOL xcodeAvailable = [FBXcodeDirectory.xcodeSelectDeveloperDirectory await:&error] != nil;
     if (!xcodeAvailable) {
-      [logger.error logFormat:@"Xcode is not available, idb will not be able to use Simulators: %@", error];
-      error = nil;
+      [logger.error logFormat:@"Xcode developer directory not found. idb_companion requires Xcode to be installed and selected via xcode-select: %@", error];
+      return 1;
     }
 
     FBFuture<NSNumber *> *signalled = [FBFuture race:@[

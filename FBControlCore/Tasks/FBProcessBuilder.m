@@ -13,7 +13,7 @@
 #import "FBDataConsumer.h"
 #import "FBProcessIO.h"
 #import "FBProcessStream.h"
-#import "FBProcess.h"
+#import "FBSubprocess.h"
 #import "FBProcessSpawnConfiguration.h"
 
 @interface IDBProcessBuilder ()
@@ -230,17 +230,30 @@
 
 #pragma mark Building
 
+<<<<<<< HEAD
 - (FBFuture<IDBProcess *> *)start
 {
   return [IDBProcess launchProcessWithConfiguration:self.buildConfiguration logger:self.logger];
 }
 
 - (FBFuture<IDBProcess *> *)runUntilCompletionWithAcceptableExitCodes:(NSSet<NSNumber *> *)exitCodes
+=======
+- (FBFuture<FBSubprocess *> *)start
+{
+  return [FBSubprocess launchProcessWithConfiguration:self.buildConfiguration logger:self.logger];
+}
+
+- (FBFuture<FBSubprocess *> *)runUntilCompletionWithAcceptableExitCodes:(NSSet<NSNumber *> *)exitCodes
+>>>>>>> upstream/main
 {
   dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
   return [[self
     start]
+<<<<<<< HEAD
     onQueue:queue fmap:^(IDBProcess *process) {
+=======
+    onQueue:queue fmap:^(FBSubprocess *process) {
+>>>>>>> upstream/main
       return [[process exitedWithCodes:exitCodes] mapReplace:process];
     }];
 }

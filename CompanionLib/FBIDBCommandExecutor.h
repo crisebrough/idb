@@ -179,9 +179,9 @@ extern FBFileContainerKind const FBFileContainerKindFramework;
 
  @param point location on the screen (NSValue<NSPoint> *), returns info for the whole screen if nil
  @param nestedFormat YES if the legacy format should be used, NO otherwise.
- @return A Future that resolves with the accessibility info
+ @return A Future that resolves with the accessibility info response
  */
-- (FBFuture<id> *)accessibility_info_at_point:(nullable NSValue *)point nestedFormat:(BOOL)nestedFormat;
+- (FBFuture<FBAccessibilityElementsResponse *> *)accessibility_info_at_point:(nullable NSValue *)point nestedFormat:(BOOL)nestedFormat;
 
 /**
  Adds media files (photos, videos, ...) to the target
@@ -284,6 +284,13 @@ This enables the permission popup the first time we open a deeplink
  @return a Future that resolves when complete.
  */
 - (FBFuture<NSNull *> *)clear_contacts;
+
+/**
+ Clears all photos from the simulator using the Photos framework.
+
+ @return a Future that resolves when complete.
+ */
+- (FBFuture<NSNull *> *)clear_photos;
 
 /**
  List the xctests installed
@@ -564,7 +571,11 @@ This enables the permission popup the first time we open a deeplink
  @param stdOut where the dap process writes
  @return A Future that resolves when the dap server is spawned. Returns the dap server process.
  */
+<<<<<<< HEAD
 - (FBFuture<IDBProcess<id, id<FBDataConsumer>, NSString *> *> *) dapServerWithPath:(NSString *)dapPath stdIn:(IDBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut;
+=======
+- (FBFuture<FBSubprocess<id, id<FBDataConsumer>, NSString *> *> *) dapServerWithPath:(NSString *)dapPath stdIn:(FBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut;
+>>>>>>> upstream/main
 
 /**
  Simulates a memory warning

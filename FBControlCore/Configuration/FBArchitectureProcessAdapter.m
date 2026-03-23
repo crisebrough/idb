@@ -133,7 +133,11 @@ static int processIsTranslated(void)
       withStdErrToDevNull]
       runUntilCompletionWithAcceptableExitCodes:[NSSet setWithObject:@0]]
       rephraseFailure:@"Failed query otool -l from %@", binary]
+<<<<<<< HEAD
       onQueue:queue fmap:^FBFuture<NSString *>*(IDBProcess<NSNull *, NSString *, NSString *> *task) {
+=======
+      onQueue:queue fmap:^FBFuture<NSString *>*(FBSubprocess<NSNull *, NSString *, NSString *> *task) {
+>>>>>>> upstream/main
         if (task.stdOut) {
             return [FBFuture futureWithResult: task.stdOut];
         }

@@ -12,7 +12,6 @@
 
 #import "FBXCTestDescriptor.h"
 #import "FBXCTestRunRequest.h"
-#import "FBXCTestRunRequest.h"
 #import "FBIDBStorageManager.h"
 #import "FBIDBError.h"
 #import "FBIDBLogger.h"
@@ -147,16 +146,31 @@ FBFileContainerKind const FBFileContainerKindFramework = @"framework";
     }];
 }
 
-- (FBFuture<id> *)accessibility_info_at_point:(nullable NSValue *)value nestedFormat:(BOOL)nestedFormat
+- (FBFuture<FBAccessibilityElementsResponse *> *)accessibility_info_at_point:(nullable NSValue *)value nestedFormat:(BOOL)nestedFormat
 {
   return [[self
     accessibilityCommands]
     onQueue:self.target.workQueue fmap:^ FBFuture * (id<FBAccessibilityCommands> commands) {
+      FBAccessibilityRequestOptions *options = [FBAccessibilityRequestOptions defaultOptions];
+      options.nestedFormat = nestedFormat;
+      options.enableLogging = YES;
+
+      FBFuture<FBAccessibilityElement *> *elementFuture;
       if (value) {
-        return [commands accessibilityElementAtPoint:value.pointValue nestedFormat:nestedFormat keys:nil];
+        elementFuture = [commands accessibilityElementAtPoint:value.pointValue];
       } else {
-        return [commands accessibilityElementsWithNestedFormat:nestedFormat keys:nil];
+        elementFuture = [commands accessibilityElementForFrontmostApplication];
       }
+      return [elementFuture
+        onQueue:self.target.workQueue map:^ FBAccessibilityElementsResponse * (FBAccessibilityElement *element) {
+          NSError *error = nil;
+          FBAccessibilityElementsResponse *response = [element serializeWithOptions:options error:&error];
+          [element close];
+          if (!response) {
+            return nil;
+          }
+          return response;
+        }];
     }];
 }
 
@@ -285,6 +299,13 @@ FBFileContainerKind const FBFileContainerKindFramework = @"framework";
 {
   return [self.settingsCommands onQueue:self.target.workQueue fmap:^FBFuture *(id<FBSimulatorSettingsCommands> commands) {
     return [commands clearContacts];
+  }];
+}
+
+- (FBFuture<NSNull *> *)clear_photos
+{
+  return [self.settingsCommands onQueue:self.target.workQueue fmap:^FBFuture *(id<FBSimulatorSettingsCommands> commands) {
+    return [commands clearPhotos];
   }];
 }
 
@@ -734,7 +755,11 @@ static const NSTimeInterval ListTestBundleTimeout = 180.0;
     }];
 }
 
+<<<<<<< HEAD
 - (FBFuture<IDBProcess<id, id<FBDataConsumer>, NSString *> *> *) dapServerWithPath:(NSString *)dapPath stdIn:(IDBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut
+=======
+- (FBFuture<FBSubprocess<id, id<FBDataConsumer>, NSString *> *> *) dapServerWithPath:(NSString *)dapPath stdIn:(FBProcessInput *)stdIn stdOut:(id<FBDataConsumer>)stdOut
+>>>>>>> upstream/main
 {
   id<FBDapServerCommand> commands = (id<FBDapServerCommand>) self.target;
   if (![commands conformsToProtocol:@protocol(FBDapServerCommand)]) {

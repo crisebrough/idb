@@ -12,6 +12,7 @@
 #import "FBControlCoreFixtures.h"
 #import "FBControlCoreLoggerDouble.h"
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
 @interface IDBProcessBuilder (IDBProcessTests)
 
 @end
@@ -23,12 +24,26 @@
   FBFuture<IDBProcess *> *future = [self start];
   NSError *error = nil;
   IDBProcess *process = [future await:&error];
+=======
+@interface FBProcessBuilder (FBSubprocessTests)
+
+@end
+
+@implementation FBProcessBuilder (FBSubprocessTests)
+
+- (FBSubprocess *)startSynchronously
+{
+  FBFuture<FBSubprocess *> *future = [self start];
+  NSError *error = nil;
+  FBSubprocess *process = [future await:&error];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
   NSAssert(process, @"Task Could not be started %@", error);
   return process;
 }
 
 @end
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
 @interface IDBProcessTests : XCTestCase
 
 @end
@@ -36,6 +51,15 @@
 @implementation IDBProcessTests
 
 - (IDBProcess *)runAndWaitForTaskFuture:(FBFuture *)future
+=======
+@interface FBSubprocessTests : XCTestCase
+
+@end
+
+@implementation FBSubprocessTests
+
+- (FBSubprocess *)runAndWaitForTaskFuture:(FBFuture *)future
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
 {
   [[future timeout:FBControlCoreGlobalConfiguration.regularTimeout waitingFor:@"FBTask to complete"] await:NULL];
   return future.result;
@@ -48,7 +72,11 @@
     withTaskLifecycleLoggingTo:FBControlCoreGlobalConfiguration.defaultLogger]
     runUntilCompletionWithAcceptableExitCodes:nil];
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
 
   XCTAssertEqualObjects(process.exitCode.result, @0);
 }
@@ -59,7 +87,11 @@
     withLaunchPath:@"/bin/sh" arguments:@[@"-c", @"false"]]
     runUntilCompletionWithAcceptableExitCodes:[NSSet setWithObject:@1]];
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
   XCTAssertEqualObjects(process.exitCode.result, @1);
 }
 
@@ -89,7 +121,11 @@
     withEnvironment:environment]
     runUntilCompletionWithAcceptableExitCodes:nil];
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
   XCTAssertEqualObjects(process.exitCode.result, @0);
   for (NSString *key in environment.allKeys) {
     NSString *expected = [NSString stringWithFormat:@"%@=%@", key, environment[key]];
@@ -105,7 +141,11 @@
   FBFuture *futureProcess = [[IDBProcessBuilder
     withLaunchPath:@"/usr/bin/base64" arguments:@[@"-i", filePath]]
     runUntilCompletionWithAcceptableExitCodes:nil];
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
 
   XCTAssertEqual(process.statLoc.state, FBFutureStateDone);
   XCTAssertEqual(process.exitCode.state, FBFutureStateDone);
@@ -123,7 +163,11 @@
   FBFuture *futureProcess = [[IDBProcessBuilder
     withLaunchPath:@"/usr/bin/strings" arguments:@[binaryPath]]
     runUntilCompletionWithAcceptableExitCodes:nil];
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
 
 
   XCTAssertEqual(process.statLoc.state, FBFutureStateDone);
@@ -141,7 +185,11 @@
   FBFuture *futureProcess = [[IDBProcessBuilder
     withLaunchPath:@"/bin/ls" arguments:@[@"-1", resourcesPath]]
     runUntilCompletionWithAcceptableExitCodes:nil];
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
 
   XCTAssertEqual(process.statLoc.state, FBFutureStateDone);
   XCTAssertEqual(process.exitCode.state, FBFutureStateDone);
@@ -168,7 +216,11 @@
       [lines addObject:line];
     }]
     runUntilCompletionWithAcceptableExitCodes:nil];
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
 
   XCTAssertEqual(process.statLoc.state, FBFutureStateDone);
   XCTAssertEqual(process.exitCode.state, FBFutureStateDone);
@@ -190,7 +242,11 @@
     withStdErrToLogger:[FBControlCoreLoggerDouble new]]
     withStdOutToLogger:[FBControlCoreLoggerDouble new]]
     runUntilCompletionWithAcceptableExitCodes:nil];
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
 
   XCTAssertEqual(process.statLoc.state, FBFutureStateDone);
   XCTAssertEqual(process.exitCode.state, FBFutureStateDone);
@@ -208,7 +264,11 @@
     withStdOutToDevNull]
     withStdErrToDevNull]
     runUntilCompletionWithAcceptableExitCodes:nil];
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [self runAndWaitForTaskFuture:futureProcess];
+=======
+  FBSubprocess *process = [self runAndWaitForTaskFuture:futureProcess];
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
 
   XCTAssertEqual(process.statLoc.state, FBFutureStateDone);
   XCTAssertEqual(process.exitCode.state, FBFutureStateDone);
@@ -219,7 +279,11 @@
 
 - (void)testUpdatesStateWithAsynchronousTermination
 {
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/sleep" arguments:@[@"1"]]
     startSynchronously];
 
@@ -231,7 +295,11 @@
 
 - (void)testAwaitingTerminationOfShortLivedProcess
 {
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/sleep" arguments:@[@"0"]]
     startSynchronously];
 
@@ -258,7 +326,11 @@
 {
   XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Termination Handler Called"];
   expectation.inverted = YES;
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/sleep" arguments:@[@"1000"]]
     startSynchronously];
 
@@ -281,7 +353,11 @@
 {
   NSData *expected = [@"FOO BAR BAZ" dataUsingEncoding:NSUTF8StringEncoding];
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[[[[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[[[[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/cat" arguments:@[]]
     withStdInConnected]
     withStdOutInMemoryAsData]
@@ -307,7 +383,11 @@
   IDBProcessInput<NSOutputStream *> *input = IDBProcessInput.inputFromStream;
   NSOutputStream *stream = input.contents;
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[[[[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[[[[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/cat" arguments:@[]]
     withStdIn:input]
     withStdOutInMemoryAsString]
@@ -335,7 +415,11 @@
   IDBProcessInput<NSOutputStream *> *input = IDBProcessInput.inputFromStream;
   NSOutputStream *stream = input.contents;
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[[[[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[[[[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/cat" arguments:@[]]
     withStdIn:input]
     withStdOutInMemoryAsString]
@@ -363,7 +447,11 @@
 {
   NSString *expected = @"FOO BAR BAZ";
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[[[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[[[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/echo" arguments:@[@"FOO BAR BAZ"]]
     withStdErrToDevNull]
     withStdOutToInputStream]
@@ -395,7 +483,11 @@
 {
   NSData *expected = [@"FOO BAR BAZ" dataUsingEncoding:NSUTF8StringEncoding];
 
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[[[[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[[[[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/cat" arguments:@[]]
     withStdInFromData:expected]
     withStdOutInMemoryAsData]
@@ -412,7 +504,11 @@
 
 - (void)testSendingSIGINT
 {
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/sleep" arguments:@[@"1000000"]]
     startSynchronously];
 
@@ -432,7 +528,11 @@
 
 - (void)testSendingSIGKILL
 {
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/bin/sleep" arguments:@[@"1000000"]]
     startSynchronously];
 
@@ -452,7 +552,11 @@
 
 - (void)testHUPBackoffToKILL
 {
+<<<<<<< HEAD:FBControlCoreTests/Tests/Integration/FBProcessTests.m
   IDBProcess *process = [[IDBProcessBuilder
+=======
+  FBSubprocess *process = [[FBProcessBuilder
+>>>>>>> upstream/main:FBControlCoreTests/Tests/Integration/FBSubprocessTests.m
     withLaunchPath:@"/usr/bin/nohup" arguments:@[@"/bin/sleep", @"10000000"]]
     startSynchronously];
 

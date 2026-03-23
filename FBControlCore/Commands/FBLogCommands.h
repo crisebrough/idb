@@ -13,7 +13,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+<<<<<<< HEAD
 @class IDBProcess;
+=======
+@class FBSubprocess;
+>>>>>>> upstream/main
 
 @protocol FBDataConsumer;
 
@@ -30,14 +34,22 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 /**
+<<<<<<< HEAD
  A log operation that is contained within an IDBProcess
+=======
+ A log operation that is contained within an FBSubprocess
+>>>>>>> upstream/main
  */
 @interface IDBProcessLogOperation : NSObject <FBLogOperation>
 
 /**
  The wrapped launched process.
  */
+<<<<<<< HEAD
 @property (nonatomic, strong, readonly) IDBProcess *process;
+=======
+@property (nonatomic, strong, readonly) FBSubprocess *process;
+>>>>>>> upstream/main
 
 /**
  The Designated Initializer
@@ -47,7 +59,11 @@ NS_ASSUME_NONNULL_BEGIN
  @param queue the queue to perform work on.
  @return an initialized IDBProcessLogOperation instance.
  */
+<<<<<<< HEAD
 - (instancetype)initWithProcess:(IDBProcess *)process consumer:(id<FBDataConsumer>)consumer queue:(dispatch_queue_t)queue;
+=======
+- (instancetype)initWithProcess:(FBSubprocess *)process consumer:(id<FBDataConsumer>)consumer queue:(dispatch_queue_t)queue;
+>>>>>>> upstream/main
 
 /**
  Inserts the base "stream" argument into the argument array for os_log, if a subcommand is not already present.

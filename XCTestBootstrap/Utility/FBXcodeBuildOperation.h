@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param logger the logger to log to.
  @return a future that resolves when the task has launched.
  */
-+ (FBFuture<IDBProcess *> *)operationWithUDID:(NSString *)udid configuration:(FBTestLaunchConfiguration *)configuration xcodeBuildPath:(NSString *)xcodeBuildPath testRunFilePath:(NSString *)testRunFilePath simDeviceSet:(nullable NSString *)simDeviceSetPath macOSTestShimPath:(nullable NSString *)macOSTestShimPath queue:(dispatch_queue_t)queue logger:(nullable id<FBControlCoreLogger>)logger;
++ (FBFuture<FBSubprocess *> *)operationWithUDID:(NSString *)udid configuration:(FBTestLaunchConfiguration *)configuration xcodeBuildPath:(NSString *)xcodeBuildPath testRunFilePath:(NSString *)testRunFilePath simDeviceSet:(nullable NSString *)simDeviceSetPath macOSTestShimPath:(nullable NSString *)macOSTestShimPath queue:(dispatch_queue_t)queue logger:(nullable id<FBControlCoreLogger>)logger;
 
 #pragma mark Public Methods
 
@@ -74,7 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param logger a logger to log to.
  @return a Future that resolves when processes have exited.
  */
-+ (FBFuture<NSArray<IDBProcessInfo *> *> *)terminateAbandonedXcodebuildProcessesForUDID:(NSString *)udid processFetcher:(IDBProcessFetcher *)processFetcher queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger;
++ (FBFuture<NSArray<FBProcessInfo *> *> *)terminateAbandonedXcodebuildProcessesForUDID:(NSString *)udid processFetcher:(FBProcessFetcher *)processFetcher queue:(dispatch_queue_t)queue logger:(id<FBControlCoreLogger>)logger;
 
 /**
  A helper method for overwriting xcTestRunProperties.
@@ -99,7 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param logger the logger to log to.
  @return a checked exit of the task.
  */
-+ (FBFuture<NSNull *> *)confirmExitOfXcodebuildOperation:(IDBProcess *)task configuration:(FBTestLaunchConfiguration *)configuration reporter:(id<FBXCTestReporter>)reporter target:(id<FBiOSTarget>)target logger:(id<FBControlCoreLogger>)logger;
++ (FBFuture<NSNull *> *)confirmExitOfXcodebuildOperation:(FBSubprocess *)task configuration:(FBTestLaunchConfiguration *)configuration reporter:(id<FBXCTestReporter>)reporter target:(id<FBiOSTarget>)target logger:(id<FBControlCoreLogger>)logger;
 
 @end
 

@@ -43,6 +43,10 @@ static NSDictionary<NSString *, id> *FBBitmapStreamPixelBufferAttributesFromPixe
 
 @end
 
+@interface FBDeviceVideoStream_H264MPEGTS : FBDeviceVideoStream
+
+@end
+
 @interface FBDeviceVideoStream_MJPEG : FBDeviceVideoStream
 
 @end
@@ -72,10 +76,10 @@ static NSDictionary<NSString *, id> *FBBitmapStreamPixelBufferAttributesFromPixe
 + (instancetype)streamWithSession:(AVCaptureSession *)session configuration:(FBVideoStreamConfiguration *)configuration logger:(id<FBControlCoreLogger>)logger error:(NSError **)error
 {
   // Get the class to project into
-  Class streamClass = [self classForEncoding:configuration.encoding];
+  Class streamClass = [self classForConfiguration:configuration];
   if (!streamClass) {
     return [[FBDeviceControlError
-      describeFormat:@"%@ is not a valid stream encoding", configuration.encoding]
+      describeFormat:@"%@ is not a valid stream format", configuration.format]
       fail:error];
   }
   // Create the output.
@@ -113,21 +117,28 @@ static NSDictionary<NSString *, id> *FBBitmapStreamPixelBufferAttributesFromPixe
   return [[streamClass alloc] initWithSession:session output:output writeQueue:writeQueue logger:logger];
 }
 
-+ (Class)classForEncoding:(FBVideoStreamEncoding)encoding
++ (Class)classForConfiguration:(FBVideoStreamConfiguration *)configuration
 {
-  if ([encoding isEqualToString:FBVideoStreamEncodingBGRA]) {
-    return FBDeviceVideoStream_BGRA.class;
+  FBVideoStreamFormat *format = configuration.format;
+  switch (format.type) {
+    case FBVideoStreamFormatTypeCompressedVideo: {
+      if ([format.codec isEqualToString:FBVideoStreamCodecH264]) {
+        if ([format.transport isEqualToString:FBVideoStreamTransportMPEGTS]) {
+          return FBDeviceVideoStream_H264MPEGTS.class;
+        }
+        return FBDeviceVideoStream_H264.class;
+      }
+      return nil;
+    }
+    case FBVideoStreamFormatTypeMJPEG:
+      return FBDeviceVideoStream_MJPEG.class;
+    case FBVideoStreamFormatTypeMinicap:
+      return FBDeviceVideoStream_Minicap.class;
+    case FBVideoStreamFormatTypeBGRA:
+      return FBDeviceVideoStream_BGRA.class;
+    default:
+      return nil;
   }
-  if ([encoding isEqualToString:FBVideoStreamEncodingH264]) {
-    return FBDeviceVideoStream_H264.class;
-  }
-  if ([encoding isEqualToString:FBVideoStreamEncodingMJPEG]) {
-    return FBDeviceVideoStream_MJPEG.class;
-  }
-  if ([encoding isEqualToString:FBVideoStreamEncodingMinicap]) {
-    return FBDeviceVideoStream_Minicap.class;
-  }
-  return nil;
 }
 
 + (BOOL)configureVideoOutput:(AVCaptureVideoDataOutput *)output configuration:(FBVideoStreamConfiguration *)configuration error:(NSError **)error;
@@ -242,7 +253,7 @@ static NSDictionary<NSString *, id> *FBBitmapStreamPixelBufferAttributesFromPixe
   if (!self.pixelBufferAttributes) {
     NSDictionary<NSString *, id> *attributes = FBBitmapStreamPixelBufferAttributesFromPixelBuffer(pixelBuffer);
     self.pixelBufferAttributes = attributes;
-    [self.logger logFormat:@"Mounting Surface with Attributes: %@", attributes];
+    [self.logger logFormat:@"Mounting Surface with Attributes: %@", [FBCollectionInformation oneLineDescriptionFromDictionary:attributes]];
   }
 }
 
@@ -268,7 +279,16 @@ static NSDictionary<NSString *, id> *FBBitmapStreamPixelBufferAttributesFromPixe
 
 - (void)consumeSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
-  WriteFrameToAnnexBStream(sampleBuffer, self.consumer, self.logger, nil);
+  WriteFrameToAnnexBStream(sampleBuffer, nil, self.consumer, self.logger, nil);
+}
+
+@end
+
+@implementation FBDeviceVideoStream_H264MPEGTS
+
+- (void)consumeSampleBuffer:(CMSampleBufferRef)sampleBuffer
+{
+  WriteH264FrameToMPEGTSStream(sampleBuffer, nil, self.consumer, self.logger, nil);
 }
 
 @end
@@ -295,7 +315,7 @@ static NSDictionary<NSString *, id> *FBBitmapStreamPixelBufferAttributesFromPixe
   output.videoSettings = @{
     AVVideoCodecKey: AVVideoCodecTypeJPEG,
     AVVideoCompressionPropertiesKey: @{
-      AVVideoQualityKey: configuration.compressionQuality,
+      AVVideoQualityKey: @0.2,
     },
   };
   return YES;

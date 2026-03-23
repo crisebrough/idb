@@ -67,7 +67,11 @@
       // Then start the task. This future will yield when the task has *started*.
       return [self _startTestWithLaunchConfiguration:testLaunchConfiguration logger:logger];
     }]
+<<<<<<< HEAD
     onQueue:self.device.workQueue fmap:^(IDBProcess *task) {
+=======
+    onQueue:self.device.workQueue fmap:^(FBSubprocess *task) {
+>>>>>>> upstream/main
       // Then wrap the started task, so that we can augment it with logging and adapt it to the FBiOSTargetOperation interface.
       return [FBXcodeBuildOperation confirmExitOfXcodebuildOperation:task configuration:testLaunchConfiguration reporter:reporter target:self.device logger:logger];
     }]
@@ -79,7 +83,11 @@
 
 #pragma mark Private
 
+<<<<<<< HEAD
 - (FBFuture<IDBProcess *> *)_startTestWithLaunchConfiguration:(FBTestLaunchConfiguration *)configuration logger:(id<FBControlCoreLogger>)logger
+=======
+- (FBFuture<FBSubprocess *> *)_startTestWithLaunchConfiguration:(FBTestLaunchConfiguration *)configuration logger:(id<FBControlCoreLogger>)logger
+>>>>>>> upstream/main
 {
   NSError *error = nil;
   // Create the .xctestrun file

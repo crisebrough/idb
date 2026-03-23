@@ -14,7 +14,7 @@
 #import "FBDataBuffer.h"
 #import "FBFileReader.h"
 #import "FBFileWriter.h"
-#import "FBProcess.h"
+#import "FBSubprocess.h"
 #import "FBProcessBuilder.h"
 #import "FBFuture+Sync.h"
 
@@ -55,7 +55,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 @interface IDBProcessFileOutput_Consumer : NSObject <IDBProcessFileOutput>
 
 @property (nonatomic, strong, readonly) id<FBDataConsumer> consumer;
+<<<<<<< HEAD
 @property (nonatomic, strong, nullable, readwrite) IDBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task;
+=======
+@property (nonatomic, strong, nullable, readwrite) FBSubprocess<NSNull *, id<FBDataConsumer>, NSNull *> *task;
+>>>>>>> upstream/main
 @property (nonatomic, strong, readonly) dispatch_queue_t queue;
 
 @end
@@ -137,7 +141,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 - (FBFuture<NSNull *> *)startReading
 {
   return [[FBFuture
+<<<<<<< HEAD
     onQueue:self.queue resolve:^ FBFuture<IDBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *> *{
+=======
+    onQueue:self.queue resolve:^ FBFuture<FBSubprocess<NSNull *, id<FBDataConsumer>, NSNull *> *> *{
+>>>>>>> upstream/main
       if (self.task) {
         return [[FBControlCoreError
           describeFormat:@"Cannot start reading, already reading"]
@@ -149,7 +157,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
         withStdErrToDevNull]
         start];
     }]
+<<<<<<< HEAD
     onQueue:self.queue map:^(IDBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task) {
+=======
+    onQueue:self.queue map:^(FBSubprocess<NSNull *, id<FBDataConsumer>, NSNull *> *task) {
+>>>>>>> upstream/main
       self.task = task;
       return NSNull.null;
     }];
@@ -159,7 +171,11 @@ static NSTimeInterval ProcessDetachDrainTimeout = 4;
 {
   return [[FBFuture
     onQueue:self.queue resolve:^ FBFuture<NSNumber *> *{
+<<<<<<< HEAD
       IDBProcess<NSNull *, id<FBDataConsumer>, NSNull *> *task = self.task;
+=======
+      FBSubprocess<NSNull *, id<FBDataConsumer>, NSNull *> *task = self.task;
+>>>>>>> upstream/main
       self.task = nil;
       if (!task) {
         return [[FBControlCoreError

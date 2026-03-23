@@ -357,6 +357,18 @@ static NSString *const SpringBoardServiceName = @"com.apple.SpringBoard";
 
 - (FBFuture<NSNull *> *)clearContacts
 {
+  return [self runSimulatorFrameworkBridgeWithService:@"contacts" action:@"clear"];
+}
+
+- (FBFuture<NSNull *> *)clearPhotos
+{
+  return [self runSimulatorFrameworkBridgeWithService:@"photos" action:@"clear"];
+}
+
+#pragma mark Private
+
+- (FBFuture<NSNull *> *)runSimulatorFrameworkBridgeWithService:(NSString *)service action:(NSString *)action
+{
   return [FBFuture onQueue:self.simulator.asyncQueue resolve:^{
     NSString *helperPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"SimulatorFrameworkBridge" ofType:nil];
     if (!helperPath) {
@@ -372,16 +384,14 @@ static NSString *const SpringBoardServiceName = @"com.apple.SpringBoard";
     }
 
     return [[[self.simulator.simctlExecutor
-      taskBuilderWithCommand:@"spawn" arguments:@[helperPath, @"contacts", @"clear"]]
+      taskBuilderWithCommand:@"spawn" arguments:@[helperPath, service, action]]
       runUntilCompletionWithAcceptableExitCodes:[NSSet setWithObject:@0]]
-      onQueue:self.simulator.asyncQueue fmap:^(FBProcess *task) {
-        [self.simulator.logger log:@"SimulatorFrameworkBridge contacts delete completed successfully"];
+      onQueue:self.simulator.asyncQueue fmap:^(FBSubprocess *task) {
+        [self.simulator.logger logFormat:@"SimulatorFrameworkBridge %@ %@ completed successfully", service, action];
         return [FBFuture futureWithResult:NSNull.null];
       }];
   }];
 }
-
-#pragma mark Private
 
 - (FBFuture<NSNull *> *)authorizeLocationSettings:(NSArray<NSString *> *)bundleIDs
 {
@@ -431,7 +441,7 @@ static NSString *const SpringBoardServiceName = @"com.apple.SpringBoard";
           return [FBSimulatorError failFutureWithError:readError];
         }
         properties[@"$objects"][2] = bundleID;
-        properties[@"$objects"][3][@"allowsNotifications"] = @(YES);
+        properties[@"$objects"][3][@"allowsNotifications"] = @YES;
 
         NSError *writeError = nil;
         NSData *resultData = [NSPropertyListSerialization dataWithPropertyList:properties format:NSPropertyListBinaryFormat_v1_0 options:0 error:&writeError];
@@ -741,7 +751,11 @@ static NSString *const SpringBoardServiceName = @"com.apple.SpringBoard";
     withStdErrInMemoryAsString]
     withTaskLifecycleLoggingTo:logger]
     runUntilCompletionWithAcceptableExitCodes:[NSSet setWithArray:@[@0, @1]]]
+<<<<<<< HEAD
     onQueue:queue fmap:^(IDBProcess<NSNull *, NSString *, NSString *> *task) {
+=======
+    onQueue:queue fmap:^(FBSubprocess<NSNull *, NSString *, NSString *> *task) {
+>>>>>>> upstream/main
       if (![task.exitCode.result isEqualToNumber:@0]) {
           return [[FBSimulatorError
             describeFormat:@"Task did not exit 0: %@ %@ %@", task.exitCode.result, task.stdOut, task.stdErr]

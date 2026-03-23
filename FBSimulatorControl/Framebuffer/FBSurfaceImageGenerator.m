@@ -14,8 +14,6 @@
 
 #import <FBControlCore/FBControlCore.h>
 
-#import <IOSurface/IOSurface.h>
-
 @interface FBSurfaceImageGenerator ()
 
 @property (nonatomic, strong, readonly) id<FBControlCoreLogger> logger;
@@ -100,7 +98,7 @@
   }
 }
 
-- (void)didReceiveDamageRect:(CGRect)rect
+- (void)didReceiveDamageRect
 {
 
 }

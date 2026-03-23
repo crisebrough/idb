@@ -74,7 +74,11 @@ static NSString *const CDHashPrefix = @"CDHash=";
     withStdErrInMemoryAsString]
     withTaskLifecycleLoggingTo:logger]
     runUntilCompletionWithAcceptableExitCodes:nil]
+<<<<<<< HEAD
     onQueue:self.queue fmap:^ FBFuture<NSNull *> * (IDBProcess<NSNull *, NSString *, NSString *> *task) {
+=======
+    onQueue:self.queue fmap:^ FBFuture<NSNull *> * (FBSubprocess<NSNull *, NSString *, NSString *> *task) {
+>>>>>>> upstream/main
       NSNumber *exitCode = task.exitCode.result;
       if (![exitCode isEqualToNumber:@0]) {
         return [[FBControlCoreError
@@ -142,7 +146,11 @@ static NSString *const CDHashPrefix = @"CDHash=";
     withStdErrInMemoryAsString]
     withTaskLifecycleLoggingTo:logger]
     runUntilCompletionWithAcceptableExitCodes:nil]
+<<<<<<< HEAD
     onQueue:self.queue fmap:^ FBFuture<NSString *> * (IDBProcess<NSNull *,NSString *,NSString *> *task) {
+=======
+    onQueue:self.queue fmap:^ FBFuture<NSString *> * (FBSubprocess<NSNull *,NSString *,NSString *> *task) {
+>>>>>>> upstream/main
       NSNumber *exitCode = task.exitCode.result;
       if (![exitCode isEqualToNumber:@0]) {
         return [[FBControlCoreError
